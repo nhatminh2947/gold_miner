@@ -1,5 +1,5 @@
-from MINER_STATE import State
 import numpy as np
+from .MINER_STATE import State
 
 
 class PlayerInfo:
