@@ -103,7 +103,7 @@ class GameSocket:
     def __init__(self, host, port):
         self.stepCount = 0
         self.maxStep = 0
-        self.mapdir = "Maps"  # where to load all pre-defined maps
+        self.mapdir = "./Miner_Training_Local_CodeSample/Maps"  # where to load all pre-defined maps
         self.mapid = ""
         self.userMatch = UserMatch()
         self.user = PlayerInfo(1)
@@ -218,7 +218,16 @@ class GameSocket:
             # print(data)
             return data
 
+    def get_actions(self, message):
+        actions = [int(action) for action in message.split(',')]
+
+        if len(actions) != 4:
+            raise Exception("Not enough actions {}".format(actions))
+
+        return actions
+
     def send(self, message):  # receive message from player (simulate send request from player)
+        actions = self.get_actions(message)
         if message.isnumeric():  # player send action
             self.resetFlag = False
             self.stepState.changedObstacles = []
@@ -233,6 +242,9 @@ class GameSocket:
                     bot.info.lastAction = action
                     # print("Bot Action: ", action)
                     self.step_action(bot.info, action)
+            # for action in actions:
+            #     if bot.info.status == PlayerInfo.STATUS_PLAYING:
+            #         self.step_action(bot.info, action)
             self.action_5_craft()
             for c in self.stepState.changedObstacles:
                 self.map[c["posy"]][c["posx"]] = -c["type"]
@@ -328,7 +340,7 @@ class GameSocket:
     def action_5_craft(self):
         craftCount = len(self.craftUsers)
         # print ("craftCount",craftCount)
-        if (craftCount > 0):
+        if craftCount > 0:
             for user in self.craftUsers:
                 x = user.posx
                 y = user.posy

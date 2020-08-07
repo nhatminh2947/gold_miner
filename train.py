@@ -34,7 +34,7 @@ def initialize():
 
     ModelCatalog.register_custom_model("1st_model", TorchRNNModel)
 
-    tune.register_env("PommeMultiAgent-v0", lambda x: v0.RllibPomme(env_config))
+    tune.register_env("PommeMultiAgent-v0", lambda x: v0.RllibMinerEnv(env_config))
 
     if params["env_id"] == "OneVsOne-v0":
         obs_space = spaces.Box(low=0, high=20, shape=(constants.NUM_FEATURES, 8, 8))
