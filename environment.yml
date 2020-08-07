@@ -1,0 +1,20 @@
+name: gold_miner
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - Tensorflow=1.14.0
+  - Keras=2.3.1
+  - Numpy=1.18.4
+  - Pandas=0.15
+  - PyTorch=1.5.0
+  - joblib=0.16.0
+  - ray=0.8.6
+  - requests=2.24.0
+  - semver=2.10.2
+  - tf-agents=0.3.0
+  - Pyqlearning=v1.2.4
+  - Mushroom-RL=v1.4.0
+  - gym=0.17.2
+  - opencv-python=4.2.0.34
+  - prettytable=0.7.2
