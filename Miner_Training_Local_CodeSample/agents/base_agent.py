@@ -1,6 +1,5 @@
 from Miner_Training_Local_CodeSample import PlayerInfo
 from Miner_Training_Local_CodeSample.MINER_STATE import State
-from constants import Action
 
 
 class BaseAgent:

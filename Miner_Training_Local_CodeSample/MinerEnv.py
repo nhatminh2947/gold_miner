@@ -36,6 +36,7 @@ class MinerEnv:
         try:
             message = self.socket.receive()  # receive new state from server
             self.state.update_state(message)  # update to local state
+            return self.state
         except Exception as e:
             import traceback
             traceback.print_exc()
