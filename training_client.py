@@ -3,10 +3,10 @@ import numpy as np
 import pandas as pd
 import sys
 
-from Miner_Training_Local_CodeSample import DQN  # A class of creating a deep q-learning model
-from Miner_Training_Local_CodeSample import \
+from MinerTrainingLocalCodeSample import DQN  # A class of creating a deep q-learning model
+from MinerTrainingLocalCodeSample import \
     Memory  # A class of creating a batch in order to store experiences for the training process
-from Miner_Training_Local_CodeSample import \
+from MinerTrainingLocalCodeSample import \
     MinerEnv  # A class of creating a communication environment between the DQN model and the GameMiner environment (GAME_SOCKET_DUMMY.py)
 
 HOST = "localhost"
@@ -19,7 +19,7 @@ if len(sys.argv) == 3:
 now = datetime.datetime.now()  # Getting the latest datetime
 header = ["Ep", "Step", "Reward", "Total_reward", "Action", "Epsilon", "Done",
           "Termination_Code"]  # Defining header for the save file
-filename = "Miner_Training_Local_CodeSample/Data/data_" + now.strftime("%Y%m%d-%H%M") + ".csv"
+filename = "MinerTrainingLocalCodeSample/Data/data_" + now.strftime("%Y%m%d-%H%M") + ".csv"
 with open(filename, 'w') as f:
     pd.DataFrame(columns=header).to_csv(f, encoding='utf-8', index=False, header=True)
 

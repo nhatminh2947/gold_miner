@@ -17,32 +17,20 @@ params = vars(args)
 
 
 def initialize():
-    # env_id = "PommeTeamCompetition-v0"
-    # env_id = "PommeTeam-v0"
-    # env_id = "PommeFFACompetitionFast-v0"
-    # env_id = "OneVsOne-v0"
-    # env_id = "PommeRadioCompetition-v2"
-
     env_config = {
         "env_id": params["env_id"],
         "render": params["render"],
         "game_state_file": params["game_state_file"],
         "center": params["center"],
         "input_size": params["input_size"],
+        "host": "localhost",
+        "port": 1234,
         "evaluate": False
     }
 
     ModelCatalog.register_custom_model("1st_model", TorchRNNModel)
 
-    tune.register_env("PommeMultiAgent-v0", lambda x: v0.RllibMinerEnv(env_config))
-
-    if params["env_id"] == "OneVsOne-v0":
-        obs_space = spaces.Box(low=0, high=20, shape=(constants.NUM_FEATURES, 8, 8))
-    else:
-        obs_space = spaces.Box(low=0, high=20,
-                               shape=(constants.NUM_FEATURES, params["input_size"], params["input_size"]))
-
-    act_space = spaces.Tuple(tuple([spaces.Discrete(6)] + [spaces.Discrete(8)] * 2))
+    tune.register_env("MinerEnv-v0", lambda x: v0.RllibMinerEnv(env_config))
 
     # Policy setting
     def gen_policy():
@@ -57,14 +45,14 @@ def initialize():
             },
             "framework": "torch"
         }
-        return PPOTorchPolicy, obs_space, act_space, config
+        return PPOTorchPolicy, constants.OBS_SPACE, constants.ACT_SPACE, config
 
     policies = {
         "policy_0": gen_policy(),
+        "policy_1": gen_policy(),
+        "policy_2": gen_policy(),
+        "policy_3": gen_policy(),
     }
-
-    for i in range(params["n_histories"]):
-        policies["policy_{}".format(len(policies))] = gen_policy()
 
     policy_names = list(policies.keys())
 
@@ -99,7 +87,7 @@ def training_team():
             "kl_coeff": params["kl_coeff"],  # disable KL
             "batch_mode": "complete_episodes" if params["complete_episodes"] else "truncate_episodes",
             "rollout_fragment_length": params["rollout_fragment_length"],
-            "env": "PommeMultiAgent-{}".format(params["env"]),
+            "env": params["ray_env"],
             "env_config": env_config,
             "num_workers": params["num_workers"],
             "num_cpus_per_worker": params["num_cpus_per_worker"],
@@ -118,7 +106,7 @@ def training_team():
             "multiagent": {
                 "policies": policies,
                 "policy_mapping_fn": policy_mapping,
-                "policies_to_train": ["policy_0"],
+                "policies_to_train": policies_to_train,
             },
             "clip_actions": False,
             "observation_filter": params["filter"],  # should use MeanStdFilter

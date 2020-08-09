@@ -1,6 +1,8 @@
 import numpy as np
-from .GAME_SOCKET_DUMMY import GameSocket  # in testing version, please use GameSocket instead of GAME_SOCKET_DUMMY
-from .MINER_STATE import State
+
+import constants
+from .GameSocketDummy import GameSocket  # in testing version, please use GameSocket instead of GAME_SOCKET_DUMMY
+from .MinerState import State
 
 TreeID = 1
 TrapID = 2
@@ -25,14 +27,23 @@ class MinerEnv:
 
     def reset(self):  # start new game
         try:
+            mapID = np.random.randint(1, 6)
+            posID_x = np.random.randint(constants.N_COLS)
+            posID_y = np.random.randint(constants.N_ROWS)
+            request = ("map" + str(mapID) + "," + str(posID_x) + "," + str(posID_y) + ",50,100")
+            print(request)
+            # Send the request to the game environment (GAME_SOCKET_DUMMY.py)
+            self.send_map_info(request)
+
             message = self.socket.receive()  # receive game info from server
             self.state.init_state(message)  # init state
+            return self.state
         except Exception as e:
             import traceback
             traceback.print_exc()
 
-    def step(self, action):  # step process
-        self.socket.send(action)  # send action to server
+    def step(self, actions):  # step process
+        self.socket.send(actions)  # send action to server
         try:
             message = self.socket.receive()  # receive new state from server
             self.state.update_state(message)  # update to local state
@@ -44,9 +55,9 @@ class MinerEnv:
     # Functions are customized by client
     def get_state(self):
         # Building the map
-        view = np.zeros([self.state.mapInfo.max_x + 1, self.state.mapInfo.max_y + 1], dtype=int)
-        for i in range(self.state.mapInfo.max_x + 1):
-            for j in range(self.state.mapInfo.max_y + 1):
+        view = np.zeros([self.state.mapInfo.width + 1, self.state.mapInfo.height + 1], dtype=int)
+        for i in range(self.state.mapInfo.width + 1):
+            for j in range(self.state.mapInfo.height + 1):
                 if self.state.mapInfo.get_obstacle(i, j) == TreeID:  # Tree
                     view[i, j] = -TreeID
                 if self.state.mapInfo.get_obstacle(i, j) == TrapID:  # Trap

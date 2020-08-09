@@ -1,5 +1,7 @@
 import json
 
+import constants
+
 
 def str_2_json(str):
     return json.loads(str, encoding="utf-8")
@@ -7,8 +9,8 @@ def str_2_json(str):
 
 class MapInfo:
     def __init__(self):
-        self.max_x = 0  # Width of the map
-        self.max_y = 0  # Height of the map
+        self.width = 0  # Width of the map
+        self.height = 0  # Height of the map
         self.golds = []  # List of the golds in the map
         self.obstacles = []
         self.numberOfPlayers = 0
@@ -16,8 +18,8 @@ class MapInfo:
 
     def init_map(self, gameInfo):
         # Initialize the map at the begining of each episode
-        self.max_x = gameInfo["width"] - 1
-        self.max_y = gameInfo["height"] - 1
+        self.width = gameInfo["width"] - 1
+        self.height = gameInfo["height"] - 1
         self.golds = gameInfo["golds"]
         self.obstacles = gameInfo["obstacles"]
         self.maxStep = gameInfo["steps"]
@@ -73,13 +75,6 @@ class MapInfo:
 
 
 class State:
-    STATUS_PLAYING = 0
-    STATUS_ELIMINATED_WENT_OUT_MAP = 1
-    STATUS_ELIMINATED_OUT_OF_ENERGY = 2
-    STATUS_ELIMINATED_INVALID_ACTION = 3
-    STATUS_STOP_EMPTY_GOLD = 4
-    STATUS_STOP_END_STEP = 5
-
     def __init__(self):
         self.end = False
         self.score = 0
@@ -91,7 +86,7 @@ class State:
         self.mapInfo = MapInfo()
         self.players = []
         self.stepCount = 0
-        self.status = State.STATUS_PLAYING
+        self.status = constants.Status.STATUS_PLAYING.value
 
     def init_state(self, data):  # parse data from server into object
         game_info = str_2_json(data)
@@ -104,10 +99,14 @@ class State:
         self.energy = game_info["energy"]
         self.mapInfo.init_map(game_info["gameinfo"])
         self.stepCount = 0
-        self.status = State.STATUS_PLAYING
-        self.players = [{"playerId": 2, "posx": self.x, "posy": self.y},
-                        {"playerId": 3, "posx": self.x, "posy": self.y},
-                        {"playerId": 4, "posx": self.x, "posy": self.y}]
+        self.status = constants.Status.STATUS_PLAYING.value
+        self.players = [{"playerId": i,
+                         "posx": self.x,
+                         "posy": self.y,
+                         "energy": game_info["energy"],
+                         "score": 0,
+                         "status": constants.Status.STATUS_PLAYING.value
+                         } for i in range(4)]
 
     def update_state(self, data):
         new_state = str_2_json(data)
@@ -125,3 +124,5 @@ class State:
         for i in range(len(self.players), 4, 1):
             self.players.append({"playerId": i, "posx": self.x, "posy": self.y})
         self.stepCount = self.stepCount + 1
+
+        return new_state

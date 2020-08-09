@@ -1,4 +1,4 @@
-from .MINER_STATE import State
+from .MinerState import State
 
 
 class PlayerInfo:
@@ -13,7 +13,7 @@ class PlayerInfo:
         self.freeCount = 0
 
 
-class Bot3:
+class Bot1:
     ACTION_GO_LEFT = 0
     ACTION_GO_RIGHT = 1
     ACTION_GO_UP = 2
@@ -34,15 +34,15 @@ class Bot3:
         if self.info.energy < 5:
             return self.ACTION_FREE
         else:
-            action = self.ACTION_GO_LEFT
-            if self.info.posx % 2 == 0:
-                if self.info.posy < self.state.mapInfo.max_y:
-                    action = self.ACTION_GO_DOWN
-            else:
-                if self.info.posy > 0:
-                    action = self.ACTION_GO_UP
-                else:
+            action = self.ACTION_GO_UP
+            if self.info.posy % 2 == 0:
+                if self.info.posx < self.state.mapInfo.width:
                     action = self.ACTION_GO_RIGHT
+            else:
+                if self.info.posx > 0:
+                    action = self.ACTION_GO_LEFT
+                else:
+                    action = self.ACTION_GO_DOWN
             return action
 
     def new_game(self, data):
@@ -57,6 +57,7 @@ class Bot3:
         # self.socket.send(action)
         try:
             self.state.update_state(data)
+            return self.state
         except Exception as e:
             import traceback
             traceback.print_exc()

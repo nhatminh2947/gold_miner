@@ -17,38 +17,33 @@ class TorchRNNModel(RecurrentNetwork, nn.Module):
             nn.Conv2d(
                 in_channels=in_channels,
                 out_channels=32,
-                kernel_size=5,
-                padding=2,
+                kernel_size=3,
                 stride=1),
             nn.ReLU(),
             nn.Conv2d(
                 in_channels=32,
                 out_channels=64,
-                kernel_size=5,
-                padding=2,
+                kernel_size=3,
                 stride=1),
             nn.ReLU(),
             nn.Conv2d(
                 in_channels=64,
                 out_channels=128,
-                kernel_size=5,
-                padding=2,
+                kernel_size=3,
                 stride=1),
             nn.ReLU(),
-            nn.Flatten(),
-            nn.Linear(input_size * input_size * 128, 1024),
+            nn.Conv2d(
+                in_channels=128,
+                out_channels=256,
+                kernel_size=3,
+                stride=1),
             nn.ReLU(),
-            nn.Linear(1024, 512),
-            nn.ReLU(),
-            nn.Linear(512, 256),
-            nn.ReLU(),
-            nn.Linear(256, 128),
-            nn.ReLU(),
+            nn.Flatten()  # 1 * 13 * 256 = 3328
         )
 
-        self.lstm = nn.LSTM(128, 128, batch_first=True)
+        self.lstm = nn.LSTM(3336, 128, batch_first=True)
 
-        self.actor_layers = nn.Linear(128, 22)
+        self.actor_layers = nn.Linear(128, 6)
 
         self.critic_layers = nn.Linear(128, 1)
 
@@ -69,8 +64,21 @@ class TorchRNNModel(RecurrentNetwork, nn.Module):
         if isinstance(seq_lens, np.ndarray):
             seq_lens = torch.Tensor(seq_lens).int()
 
-        x = input_dict["obs"]
+        x = input_dict["obs"]["conv_features"]
         x = self.shared_layers(x)
+
+        if type(input_dict["prev_rewards"]) != torch.Tensor:
+            input_dict["prev_rewards"] = torch.tensor(input_dict["prev_rewards"], device='cpu')
+
+        if type(input_dict["prev_actions"]) != torch.Tensor:
+            prev_actions = np.array(input_dict["prev_actions"], dtype=np.int)
+        else:
+            prev_actions = np.array(input_dict["prev_actions"].cpu().numpy(), dtype=np.int)
+
+        last_reward = torch.reshape(input_dict["prev_rewards"], [-1, 1]).float()
+        one_hot_prev_actions = nn.functional.one_hot(torch.tensor(prev_actions), self.action_space.n)
+
+        x = torch.cat((x, input_dict["obs"]["energy"], last_reward, one_hot_prev_actions.float().cpu()), dim=1)
 
         output, new_state = self.forward_rnn(
             add_time_dimension(x.float(), seq_lens, framework="torch"),

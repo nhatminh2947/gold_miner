@@ -17,7 +17,7 @@ class AgentOne(BaseAgent):
         else:
             action = Action.ACTION_GO_UP.value
             if self.info.posy % 2 == 0:
-                if self.info.posx < self.state.mapInfo.max_x:
+                if self.info.posx < self.state.mapInfo.width:
                     action = Action.ACTION_GO_RIGHT.value
             else:
                 if self.info.posx > 0:

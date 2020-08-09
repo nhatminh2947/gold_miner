@@ -1,6 +1,33 @@
 from enum import Enum
 
-NUM_FEATURES = 6
+from gym.spaces import Dict, Box, Discrete
+
+# GOLD PER MAP
+# Map 1 6500
+# Map 2 6850
+# Map 3 7300
+# Map 4 7500
+# Map 5 7100
+
+NUM_FEATURES = 9
+N_COLS = 21
+N_ROWS = 9
+MAX_GOLD = 10000
+MAX_ENERGY = 50
+
+OBS_SPACE = Dict({
+    "conv_features": Box(low=0, high=1, shape=(NUM_FEATURES, N_ROWS, N_COLS)),
+    "energy": Box(low=0, high=1, shape=(1,))
+})
+
+ACT_SPACE = Discrete(6)
+
+
+class Obstacle(Enum):
+    LAND = 0
+    TREE = 1
+    TRAP = 2
+    SWAMP = 3
 
 
 class Action(Enum):
