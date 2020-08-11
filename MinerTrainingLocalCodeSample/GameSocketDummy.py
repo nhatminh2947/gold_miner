@@ -152,7 +152,6 @@ class GameSocket:
     def send(self, message):  # receive message from player (simulate send request from player)
         if "map" in message:  # reset game
             requests = message.split(",")
-            print("Reset game: ", requests)
             self.reset(requests)
         else:
             actions = self.get_actions(message)  # send 4 action of player

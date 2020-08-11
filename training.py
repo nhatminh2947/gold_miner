@@ -1,9 +1,14 @@
+from typing import Dict
+
 import ray
-from gym import spaces
 from ray import tune
+from ray.rllib.agents.callbacks import DefaultCallbacks
 from ray.rllib.agents.ppo import PPOTrainer
 from ray.rllib.agents.ppo.ppo_torch_policy import PPOTorchPolicy
+from ray.rllib.env import BaseEnv
+from ray.rllib.evaluation import MultiAgentEpisode, RolloutWorker
 from ray.rllib.models import ModelCatalog
+from ray.rllib.policy import Policy
 
 import arguments
 import constants
@@ -16,12 +21,40 @@ args = parser.parse_args()
 params = vars(args)
 
 
+class MinerCallbacks(DefaultCallbacks):
+    def on_episode_step(self, worker: RolloutWorker, base_env: BaseEnv,
+                        episode: MultiAgentEpisode, **kwargs):
+
+        for (agent_name, policy), v in episode.agent_rewards.items():
+            info = episode.last_info_for(agent_name)
+            last_action = episode.last_action_for(agent_name)
+            if last_action == 5:
+                episode.custom_metrics["{}/craft".format(policy)] += 1
+                episode.custom_metrics["{}/free".format(policy)] += 1
+            episode.custom_metrics["{}/energy".format(policy)] += info["energy"]
+
+
+    def on_episode_start(self, worker: RolloutWorker, base_env: BaseEnv,
+                         policies: Dict[str, Policy],
+                         episode: MultiAgentEpisode, **kwargs):
+        for policy in policies:
+            episode.custom_metrics["{}/energy".format(policy)] = 0
+            episode.custom_metrics["{}/craft".format(policy)] = 0
+            episode.custom_metrics["{}/free".format(policy)] = 0
+
+    def on_episode_end(self, worker: RolloutWorker, base_env: BaseEnv,
+                       policies: Dict[str, Policy],
+                       episode: MultiAgentEpisode, **kwargs):
+
+        for (agent_name, policy), v in episode.agent_rewards.items():
+            info = episode.last_info_for(agent_name)
+            episode.custom_metrics["{}/gold".format(policy)] = info["gold"]
+            episode.custom_metrics["{}/energy".format(policy)] /= episode.length
+
+
 def initialize():
     env_config = {
-        "env_id": params["env_id"],
-        "render": params["render"],
         "game_state_file": params["game_state_file"],
-        "center": params["center"],
         "input_size": params["input_size"],
         "host": "localhost",
         "port": 1234,
@@ -74,7 +107,6 @@ def training_team():
         num_samples=params['num_samples'],
         queue_trials=params["queue_trials"],
         stop={
-            # "training_iteration": params["training_iteration"],
             "timesteps_total": params["timesteps_total"]
         },
         checkpoint_freq=params["checkpoint_freq"],
@@ -102,7 +134,7 @@ def training_team():
             "vf_share_layers": True,
             "vf_loss_coeff": params["vf_loss_coeff"],
             "vf_clip_param": params["vf_clip_param"],
-            # "callbacks": PommeCallbacks,
+            "callbacks": MinerCallbacks,
             "multiagent": {
                 "policies": policies,
                 "policy_mapping_fn": policy_mapping,

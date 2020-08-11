@@ -32,23 +32,28 @@ class RllibMinerEnv(MultiAgentEnv):
                 actions.append(action_dict[self.agent_names[i]])
             else:
                 actions.append(Action.ACTION_FREE.value)
-        print("ACTIONS: ", action_dict)
+
         alive_agents = list(action_dict.keys())
         raw_obs = self.env.step(','.join([str(action) for action in actions]))
+        rewards = self._rewards(alive_agents, raw_obs.players)
 
         dones = {}
         infos = {}
 
         for i, agent_name in enumerate(self.agent_names):
-            if agent_name in alive_agents and raw_obs.players[i]["status"] != constants.Status.STATUS_PLAYING.value:
-                dones[self.agent_names[i]] = True
-                self.count_done += 1
-                print("player_{}: DONE".format(i))
+            if agent_name in alive_agents:
+                infos[self.agent_names[i]] = {
+                    "energy": raw_obs.players[i]["energy"]
+                }
+
+                if raw_obs.players[i]["status"] != constants.Status.STATUS_PLAYING.value:
+                    infos[self.agent_names[i]]["gold"] = self.prev_score[agent_name]
+                    dones[self.agent_names[i]] = True
+                    self.count_done += 1
 
         dones["__all__"] = self.count_done == 4
 
         obs = utils.featurize(self.agent_names, alive_agents, raw_obs)
-        rewards = self._rewards(alive_agents, raw_obs.players)
 
         return obs, rewards, dones, infos
 
@@ -58,16 +63,16 @@ class RllibMinerEnv(MultiAgentEnv):
         for i, agent_name in enumerate(self.agent_names):
             if agent_name in alive_agents:
                 if players[i]["status"] == constants.Status.STATUS_PLAYING.value:
-                    rewards[agent_name] = players[i]["score"] - self.prev_score[agent_name]
-                    self.prev_score[agent_name] = players[i]["score"]
-                else:
-                    rewards[agent_name] = -1
-        print("REWARD:", rewards)
+                    rewards[agent_name] = 0.01 \
+                                          + (players[i]["score"] - self.prev_score[agent_name]) / constants.MAX_GOLD
+                elif players[i]["status"] != constants.Status.STATUS_STOP_END_STEP:
+                    rewards[agent_name] = -1 - (len(alive_agents) - 1) * 0.1
+
+                self.prev_score[agent_name] = players[i]["score"]
 
         return rewards
 
     def reset(self):
-        print("RESET ENV")
         raw_obs = self.env.reset()
         self.prev_alive = self.agent_names.copy()
 

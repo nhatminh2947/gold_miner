@@ -9,14 +9,14 @@ from gym.spaces import Dict, Box, Discrete
 # Map 4 7500
 # Map 5 7100
 
-NUM_FEATURES = 9
+NUM_FEATURES = 12
 N_COLS = 21
 N_ROWS = 9
-MAX_GOLD = 10000
+MAX_GOLD = 5000
 MAX_ENERGY = 50
 
 OBS_SPACE = Dict({
-    "conv_features": Box(low=0, high=1, shape=(NUM_FEATURES, N_ROWS, N_COLS)),
+    "conv_features": Box(low=0, high=2, shape=(NUM_FEATURES, N_ROWS, N_COLS)),
     "energy": Box(low=0, high=1, shape=(1,))
 })
 

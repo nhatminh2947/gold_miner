@@ -31,8 +31,8 @@ class MinerEnv:
             posID_x = np.random.randint(constants.N_COLS)
             posID_y = np.random.randint(constants.N_ROWS)
             request = ("map" + str(mapID) + "," + str(posID_x) + "," + str(posID_y) + ",50,100")
-            print(request)
             # Send the request to the game environment (GAME_SOCKET_DUMMY.py)
+            print(request)
             self.send_map_info(request)
 
             message = self.socket.receive()  # receive game info from server
@@ -58,11 +58,11 @@ class MinerEnv:
         view = np.zeros([self.state.mapInfo.width + 1, self.state.mapInfo.height + 1], dtype=int)
         for i in range(self.state.mapInfo.width + 1):
             for j in range(self.state.mapInfo.height + 1):
-                if self.state.mapInfo.get_obstacle(i, j) == TreeID:  # Tree
+                if self.state.mapInfo.get_obstacle_type(i, j) == TreeID:  # Tree
                     view[i, j] = -TreeID
-                if self.state.mapInfo.get_obstacle(i, j) == TrapID:  # Trap
+                if self.state.mapInfo.get_obstacle_type(i, j) == TrapID:  # Trap
                     view[i, j] = -TrapID
-                if self.state.mapInfo.get_obstacle(i, j) == SwampID:  # Swamp
+                if self.state.mapInfo.get_obstacle_type(i, j) == SwampID:  # Swamp
                     view[i, j] = -SwampID
                 if self.state.mapInfo.gold_amount(i, j) > 0:
                     view[i, j] = self.state.mapInfo.gold_amount(i, j)
@@ -94,11 +94,11 @@ class MinerEnv:
             reward += score_action
 
         # If the DQN agent crashs into obstacels (Tree, Trap, Swamp), then it should be punished by a negative reward
-        if self.state.mapInfo.get_obstacle(self.state.x, self.state.y) == TreeID:  # Tree
+        if self.state.mapInfo.get_obstacle_type(self.state.x, self.state.y) == TreeID:  # Tree
             reward -= TreeID
-        if self.state.mapInfo.get_obstacle(self.state.x, self.state.y) == TrapID:  # Trap
+        if self.state.mapInfo.get_obstacle_type(self.state.x, self.state.y) == TrapID:  # Trap
             reward -= TrapID
-        if self.state.mapInfo.get_obstacle(self.state.x, self.state.y) == SwampID:  # Swamp
+        if self.state.mapInfo.get_obstacle_type(self.state.x, self.state.y) == SwampID:  # Swamp
             reward -= SwampID
 
         # If out of the map, then the DQN agent should be punished by a larger nagative reward.

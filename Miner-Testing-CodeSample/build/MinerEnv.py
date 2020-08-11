@@ -52,11 +52,11 @@ class MinerEnv:
         view = np.zeros([self.state.mapInfo.width + 1, self.state.mapInfo.height + 1], dtype=int)
         for i in range(self.state.mapInfo.width + 1):
             for j in range(self.state.mapInfo.height + 1):
-                if self.state.mapInfo.get_obstacle(i, j) == TreeID:  # Tree
+                if self.state.mapInfo.get_obstacle_type(i, j) == TreeID:  # Tree
                     view[i, j] = -TreeID
-                if self.state.mapInfo.get_obstacle(i, j) == TrapID:  # Trap
+                if self.state.mapInfo.get_obstacle_type(i, j) == TrapID:  # Trap
                     view[i, j] = -TrapID
-                if self.state.mapInfo.get_obstacle(i, j) == SwampID:  # Swamp
+                if self.state.mapInfo.get_obstacle_type(i, j) == SwampID:  # Swamp
                     view[i, j] = -SwampID
                 if self.state.mapInfo.gold_amount(i, j) > 0:
                     view[i, j] = self.state.mapInfo.gold_amount(i, j)

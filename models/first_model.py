@@ -38,10 +38,11 @@ class TorchRNNModel(RecurrentNetwork, nn.Module):
                 kernel_size=3,
                 stride=1),
             nn.ReLU(),
-            nn.Flatten()  # 1 * 13 * 256 = 3328
+            nn.Flatten(),  # 1 * 13 * 256 = 3328
+            nn.Linear(3328, 1024)
         )
 
-        self.lstm = nn.LSTM(3336, 128, batch_first=True)
+        self.lstm = nn.LSTM(1032, 128, batch_first=True)
 
         self.actor_layers = nn.Linear(128, 6)
 
@@ -64,11 +65,13 @@ class TorchRNNModel(RecurrentNetwork, nn.Module):
         if isinstance(seq_lens, np.ndarray):
             seq_lens = torch.Tensor(seq_lens).int()
 
+        device = 'cuda' if torch.cuda.is_available() else 'cpu'
+
         x = input_dict["obs"]["conv_features"]
         x = self.shared_layers(x)
 
         if type(input_dict["prev_rewards"]) != torch.Tensor:
-            input_dict["prev_rewards"] = torch.tensor(input_dict["prev_rewards"], device='cpu')
+            input_dict["prev_rewards"] = torch.tensor(input_dict["prev_rewards"], device=device)
 
         if type(input_dict["prev_actions"]) != torch.Tensor:
             prev_actions = np.array(input_dict["prev_actions"], dtype=np.int)
@@ -78,7 +81,7 @@ class TorchRNNModel(RecurrentNetwork, nn.Module):
         last_reward = torch.reshape(input_dict["prev_rewards"], [-1, 1]).float()
         one_hot_prev_actions = nn.functional.one_hot(torch.tensor(prev_actions), self.action_space.n)
 
-        x = torch.cat((x, input_dict["obs"]["energy"], last_reward, one_hot_prev_actions.float().cpu()), dim=1)
+        x = torch.cat((x, input_dict["obs"]["energy"], last_reward, one_hot_prev_actions.float().to(device)), dim=1)
 
         output, new_state = self.forward_rnn(
             add_time_dimension(x.float(), seq_lens, framework="torch"),
