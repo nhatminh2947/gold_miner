@@ -12,6 +12,7 @@ from ray.rllib.policy import Policy
 
 import arguments
 import constants
+from MinerTrainingLocalCodeSample import Metrics
 from models import TorchRNNModel, SecondModel
 from rllib_envs import v0
 from utils import policy_mapping
@@ -22,25 +23,6 @@ params = vars(args)
 
 
 class MinerCallbacks(DefaultCallbacks):
-    def on_episode_step(self, worker: RolloutWorker, base_env: BaseEnv,
-                        episode: MultiAgentEpisode, **kwargs):
-
-        for (agent_name, policy), v in episode.agent_rewards.items():
-            info = episode.last_info_for(agent_name)
-            last_action = episode.last_action_for(agent_name)
-            if last_action == 5:
-                episode.custom_metrics["{}/craft".format(policy)] += 1
-                episode.custom_metrics["{}/free".format(policy)] += 1
-            episode.custom_metrics["{}/energy".format(policy)] += info["energy"]
-
-    def on_episode_start(self, worker: RolloutWorker, base_env: BaseEnv,
-                         policies: Dict[str, Policy],
-                         episode: MultiAgentEpisode, **kwargs):
-        for policy in policies:
-            episode.custom_metrics["{}/energy".format(policy)] = 0
-            episode.custom_metrics["{}/craft".format(policy)] = 0
-            episode.custom_metrics["{}/free".format(policy)] = 0
-
     def on_episode_end(self, worker: RolloutWorker, base_env: BaseEnv,
                        policies: Dict[str, Policy],
                        episode: MultiAgentEpisode, **kwargs):
@@ -48,8 +30,12 @@ class MinerCallbacks(DefaultCallbacks):
         for (agent_name, policy), v in episode.agent_rewards.items():
             info = episode.last_info_for(agent_name)
             episode.custom_metrics["{}/gold".format(policy)] = info["gold"]
-            episode.custom_metrics["{}/energy".format(policy)] /= episode.length
-            for status in constants.Status:
+            for key in Metrics:
+                episode.custom_metrics[f"{policy}/{key.name}"] = info["metrics"][key.name]
+
+            for status in [constants.Status.STATUS_ELIMINATED_OUT_OF_ENERGY,
+                           constants.Status.STATUS_ELIMINATED_WENT_OUT_MAP,
+                           constants.Status.STATUS_STOP_END_STEP]:
                 episode.custom_metrics["{}/{}".format(policy, status.name)] = int(status.name == info["death"].name)
 
 

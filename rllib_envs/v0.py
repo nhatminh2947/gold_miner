@@ -2,6 +2,7 @@ from ray.rllib.env.multi_agent_env import MultiAgentEnv
 
 import constants
 import utils
+from MinerTrainingLocalCodeSample import Metrics
 from MinerTrainingLocalCodeSample import MinerEnv
 from constants import Action
 
@@ -21,12 +22,17 @@ class RllibMinerEnv(MultiAgentEnv):
         self.prev_players = None
         self.prev_obs = None
         self.count_done = 0
+        self.stat = []
+        for i in range(4):
+            self.stat.append({metric.name: 0 for metric in Metrics})
+            self.stat[i][Metrics.ENERGY.name] = 50
 
     def step(self, action_dict):
         actions = []
         for i in range(4):
             if self.agent_names[i] in action_dict:
                 actions.append(action_dict[self.agent_names[i]])
+                self.stat[i][Metrics(actions[-1]).name] += 1
             else:
                 actions.append(Action.ACTION_FREE.value)
 
@@ -41,14 +47,14 @@ class RllibMinerEnv(MultiAgentEnv):
 
         for i, agent_name in enumerate(self.agent_names):
             if agent_name in alive_agents:
-                infos[self.agent_names[i]] = {
-                    "energy": raw_obs.players[i]["energy"]
-                }
+                infos[self.agent_names[i]] = {}
+
+                self.stat[i][Metrics.ENERGY.name] += raw_obs.players[i]["energy"]
 
                 if raw_obs.players[i]["status"] != constants.Status.STATUS_PLAYING.value:
                     infos[self.agent_names[i]]["gold"] = self.prev_players[i]["score"]
                     infos[self.agent_names[i]]["death"] = constants.Status(raw_obs.players[i]["status"])
-
+                    infos[self.agent_names[i]]["metrics"] = self.stat[i]
                     dones[self.agent_names[i]] = True
                     self.count_done += 1
 
@@ -68,7 +74,7 @@ class RllibMinerEnv(MultiAgentEnv):
                 #                            * constants.SCALE / constants.MAX_GOLD
                 if players[i]["status"] != constants.Status.STATUS_STOP_END_STEP.value \
                         and players[i]["status"] != constants.Status.STATUS_PLAYING.value:
-                    rewards[agent_name] += -1 - (len(alive_agents) - 1) * 0.1
+                    rewards[agent_name] += -1
                     continue
 
                 # if actions[i] == constants.Action.ACTION_CRAFT.value \
@@ -98,11 +104,13 @@ class RllibMinerEnv(MultiAgentEnv):
     def reset(self):
         raw_obs = self.env.reset()
         self.prev_alive = self.agent_names.copy()
-
         self.prev_players = raw_obs.players.copy()
-
         self.count_done = 0
-
         self.prev_obs = utils.featurize(self.agent_names, self.agent_names, raw_obs)
+
+        self.stat = []
+        for i in range(4):
+            self.stat.append({metric.name: 0 for metric in Metrics})
+            self.stat[i][Metrics.ENERGY.name] = 50
 
         return self.prev_obs
