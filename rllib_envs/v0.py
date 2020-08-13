@@ -66,7 +66,8 @@ class RllibMinerEnv(MultiAgentEnv):
                 # if players[i]["status"] == constants.Status.STATUS_PLAYING.value:
                 #     rewards[agent_name] += (players[i]["score"] - self.prev_players[i]["score"]) \
                 #                            * constants.SCALE / constants.MAX_GOLD
-                if players[i]["status"] != constants.Status.STATUS_STOP_END_STEP.value:
+                if players[i]["status"] != constants.Status.STATUS_STOP_END_STEP.value \
+                        and players[i]["status"] != constants.Status.STATUS_PLAYING.value:
                     rewards[agent_name] += -1 - (len(alive_agents) - 1) * 0.1
                     continue
 
@@ -80,6 +81,9 @@ class RllibMinerEnv(MultiAgentEnv):
                 if players[i]["lastAction"] in [0, 1, 2, 3, 5] \
                         and obs[agent_name]["conv_features"][12][players[i]["posy"], players[i]["posx"]]:
                     sign = -1
+
+                if players[i]["lastAction"] == 4:
+                    continue
 
                 rewards[agent_name] += sign * (players[i]["energy"] - self.prev_players[i]["energy"]) \
                                        / constants.BASE_ENERGY * constants.BASE_REWARD * constants.SCALE
