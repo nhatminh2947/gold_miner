@@ -26,6 +26,7 @@ class RllibMinerEnv(MultiAgentEnv):
         for i in range(4):
             self.stat.append({metric.name: 0 for metric in Metrics})
             self.stat[i][Metrics.ENERGY.name] = 50
+        self.total_gold = 0
 
     def step(self, action_dict):
         actions = []
@@ -39,8 +40,8 @@ class RllibMinerEnv(MultiAgentEnv):
         alive_agents = list(action_dict.keys())
         raw_obs = self.env.step(','.join([str(action) for action in actions]))
 
-        obs = utils.featurize(self.agent_names, alive_agents, raw_obs)
-        rewards = self._rewards(alive_agents, raw_obs.players, obs, actions)
+        obs = utils.featurize(self.agent_names, alive_agents, raw_obs, self.total_gold)
+        rewards = self._rewards(alive_agents, raw_obs.players, obs)
 
         dones = {}
         infos = {}
@@ -62,27 +63,21 @@ class RllibMinerEnv(MultiAgentEnv):
 
         return obs, rewards, dones, infos
 
-    def _rewards(self, alive_agents, players, obs, actions):
+    def _rewards(self, alive_agents, players, obs):
         rewards = {}
 
         for i, agent_name in enumerate(self.agent_names):
             if agent_name in alive_agents:
                 sign = 1
                 rewards[agent_name] = 0
-                # if players[i]["status"] == constants.Status.STATUS_PLAYING.value:
-                #     rewards[agent_name] += (players[i]["score"] - self.prev_players[i]["score"]) \
-                #                            * constants.SCALE / constants.MAX_GOLD
+
+                base_reward = 50 if players[i]["score"] - self.prev_players[i]["score"] == 0 \
+                    else players[i]["score"] - self.prev_players[i]["score"]
+
                 if players[i]["status"] != constants.Status.STATUS_STOP_END_STEP.value \
                         and players[i]["status"] != constants.Status.STATUS_PLAYING.value:
                     rewards[agent_name] += -1
                     continue
-
-                # if actions[i] == constants.Action.ACTION_CRAFT.value \
-                #         and self.prev_obs[agent_name]["conv_features"][12][players[i]["posy"], players[i]["posx"]] == 0:
-                #     rewards[agent_name] -= constants.BASE_REWARD * constants.SCALE
-                #
-                # if actions[i] == constants.Action.ACTION_FREE.value and players[i]["energy"] >= 40:
-                #     rewards[agent_name] -= constants.BASE_REWARD * constants.SCALE
 
                 if players[i]["lastAction"] in [0, 1, 2, 3, 5] \
                         and obs[agent_name]["conv_features"][12][players[i]["posy"], players[i]["posx"]]:
@@ -92,10 +87,7 @@ class RllibMinerEnv(MultiAgentEnv):
                     continue
 
                 rewards[agent_name] += sign * (players[i]["energy"] - self.prev_players[i]["energy"]) \
-                                       / constants.BASE_ENERGY * constants.BASE_REWARD * constants.SCALE
-
-                # if actions[i] in [0, 1, 2, 3]:
-                #     rewards[agent_name] += 0.001
+                                       / constants.BASE_ENERGY * (base_reward / self.total_gold)
 
         self.prev_players = players
 
@@ -103,10 +95,15 @@ class RllibMinerEnv(MultiAgentEnv):
 
     def reset(self):
         raw_obs = self.env.reset()
+
+        self.total_gold = 0
+        for cell in raw_obs.mapInfo.golds:
+            self.total_gold += cell["amount"]
+
         self.prev_alive = self.agent_names.copy()
         self.prev_players = raw_obs.players.copy()
         self.count_done = 0
-        self.prev_obs = utils.featurize(self.agent_names, self.agent_names, raw_obs)
+        self.prev_obs = utils.featurize(self.agent_names, self.agent_names, raw_obs, self.total_gold)
 
         self.stat = []
         for i in range(4):

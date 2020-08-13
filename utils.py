@@ -10,7 +10,7 @@ def policy_mapping(agent_id):
     return agent_id
 
 
-def featurize(agent_names, alive_agents, obs):
+def featurize(agent_names, alive_agents, obs, total_gold):
     players = np.zeros((4, obs.mapInfo.height + 1, obs.mapInfo.width + 1), dtype=float)
     obstacle_1 = np.zeros([obs.mapInfo.height + 1, obs.mapInfo.width + 1], dtype=float)
     obstacle_random = np.zeros([obs.mapInfo.height + 1, obs.mapInfo.width + 1], dtype=float)
@@ -46,7 +46,7 @@ def featurize(agent_names, alive_agents, obs):
             obstacle_value_min[i, j] = (-value if value != 0 else 5) / constants.MAX_ENERGY
             obstacle_value_max[i, j] = (-value if value != 0 else 20) / constants.MAX_ENERGY
 
-            gold_amount[i, j] = obs.mapInfo.gold_amount(j, i) / constants.MAX_GOLD
+            gold_amount[i, j] = obs.mapInfo.gold_amount(j, i) / total_gold
 
     max_extractable_gold = gold_amount.copy()
 
