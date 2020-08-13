@@ -18,11 +18,8 @@ class RllibMinerEnv(MultiAgentEnv):
         ]
 
         self.prev_alive = self.agent_names.copy()
-
-        self.prev_score = {
-            agent_name: 0 for agent_name in self.agent_names
-        }
-
+        self.prev_players = None
+        self.prev_obs = None
         self.count_done = 0
 
     def step(self, action_dict):
@@ -35,7 +32,9 @@ class RllibMinerEnv(MultiAgentEnv):
 
         alive_agents = list(action_dict.keys())
         raw_obs = self.env.step(','.join([str(action) for action in actions]))
-        rewards = self._rewards(alive_agents, raw_obs.players)
+
+        obs = utils.featurize(self.agent_names, alive_agents, raw_obs)
+        rewards = self._rewards(alive_agents, raw_obs.players, obs, actions)
 
         dones = {}
         infos = {}
@@ -47,28 +46,48 @@ class RllibMinerEnv(MultiAgentEnv):
                 }
 
                 if raw_obs.players[i]["status"] != constants.Status.STATUS_PLAYING.value:
-                    infos[self.agent_names[i]]["gold"] = self.prev_score[agent_name]
+                    infos[self.agent_names[i]]["gold"] = self.prev_players[i]["score"]
+                    infos[self.agent_names[i]]["death"] = constants.Status(raw_obs.players[i]["status"])
+
                     dones[self.agent_names[i]] = True
                     self.count_done += 1
 
         dones["__all__"] = self.count_done == 4
 
-        obs = utils.featurize(self.agent_names, alive_agents, raw_obs)
-
         return obs, rewards, dones, infos
 
-    def _rewards(self, alive_agents, players):
+    def _rewards(self, alive_agents, players, obs, actions):
         rewards = {}
 
         for i, agent_name in enumerate(self.agent_names):
             if agent_name in alive_agents:
-                if players[i]["status"] == constants.Status.STATUS_PLAYING.value:
-                    rewards[agent_name] = 0.01 \
-                                          + (players[i]["score"] - self.prev_score[agent_name]) / constants.MAX_GOLD
-                elif players[i]["status"] != constants.Status.STATUS_STOP_END_STEP:
-                    rewards[agent_name] = -1 - (len(alive_agents) - 1) * 0.1
+                sign = 1
+                rewards[agent_name] = 0
+                # if players[i]["status"] == constants.Status.STATUS_PLAYING.value:
+                #     rewards[agent_name] += (players[i]["score"] - self.prev_players[i]["score"]) \
+                #                            * constants.SCALE / constants.MAX_GOLD
+                if players[i]["status"] != constants.Status.STATUS_STOP_END_STEP.value:
+                    rewards[agent_name] += -1 - (len(alive_agents) - 1) * 0.1
+                    continue
 
-                self.prev_score[agent_name] = players[i]["score"]
+                # if actions[i] == constants.Action.ACTION_CRAFT.value \
+                #         and self.prev_obs[agent_name]["conv_features"][12][players[i]["posy"], players[i]["posx"]] == 0:
+                #     rewards[agent_name] -= constants.BASE_REWARD * constants.SCALE
+                #
+                # if actions[i] == constants.Action.ACTION_FREE.value and players[i]["energy"] >= 40:
+                #     rewards[agent_name] -= constants.BASE_REWARD * constants.SCALE
+
+                if players[i]["lastAction"] in [0, 1, 2, 3, 5] \
+                        and obs[agent_name]["conv_features"][12][players[i]["posy"], players[i]["posx"]]:
+                    sign = -1
+
+                rewards[agent_name] += sign * (players[i]["energy"] - self.prev_players[i]["energy"]) \
+                                       / constants.BASE_ENERGY * constants.BASE_REWARD * constants.SCALE
+
+                # if actions[i] in [0, 1, 2, 3]:
+                #     rewards[agent_name] += 0.001
+
+        self.prev_players = players
 
         return rewards
 
@@ -76,10 +95,10 @@ class RllibMinerEnv(MultiAgentEnv):
         raw_obs = self.env.reset()
         self.prev_alive = self.agent_names.copy()
 
-        self.prev_score = {
-            agent_name: 0 for agent_name in self.agent_names
-        }
+        self.prev_players = raw_obs.players.copy()
 
         self.count_done = 0
 
-        return utils.featurize(self.agent_names, self.agent_names, raw_obs)
+        self.prev_obs = utils.featurize(self.agent_names, self.agent_names, raw_obs)
+
+        return self.prev_obs

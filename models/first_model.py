@@ -5,6 +5,8 @@ from ray.rllib.policy.rnn_sequencing import add_time_dimension
 from ray.rllib.utils import try_import_torch
 from ray.rllib.utils.annotations import override
 
+from .noisy_layer import NoisyLayer
+
 torch, nn = try_import_torch()
 
 
@@ -39,14 +41,13 @@ class TorchRNNModel(RecurrentNetwork, nn.Module):
                 stride=1),
             nn.ReLU(),
             nn.Flatten(),  # 1 * 13 * 256 = 3328
-            nn.Linear(3328, 1024)
         )
 
-        self.lstm = nn.LSTM(1032, 128, batch_first=True)
+        self.lstm = nn.LSTM(3338, 128, batch_first=True)
 
-        self.actor_layers = nn.Linear(128, 6)
+        self.actor_layers = NoisyLayer(128, 6, activation=None)
 
-        self.critic_layers = nn.Linear(128, 1)
+        self.critic_layers = NoisyLayer(128, 1, activation=None)
 
         self._shared_layer_out = None
         self._features = None
@@ -81,7 +82,8 @@ class TorchRNNModel(RecurrentNetwork, nn.Module):
         last_reward = torch.reshape(input_dict["prev_rewards"], [-1, 1]).float()
         one_hot_prev_actions = nn.functional.one_hot(torch.tensor(prev_actions), self.action_space.n)
 
-        x = torch.cat((x, input_dict["obs"]["energy"], last_reward, one_hot_prev_actions.float().to(device)), dim=1)
+        x = torch.cat((x, input_dict["obs"]["fc_features"], last_reward, one_hot_prev_actions.float().to(device)),
+                      dim=1)
 
         output, new_state = self.forward_rnn(
             add_time_dimension(x.float(), seq_lens, framework="torch"),

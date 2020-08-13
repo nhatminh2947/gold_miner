@@ -90,13 +90,13 @@ class GameSocket:
                     self.energyOnMap[x][y] = ObstacleInfo.types[self.map[x][y]]
 
     def connect(self):  # simulate player's connect request
-        print("Connected to server.")
+        # print("Connected to server.")
         # load all pre-defined maps from mapDir
         path = os.getcwd()
 
-        print("path:", path)
+        # print("path:", path)
         for filename in os.listdir(self.mapdir):
-            print("Found: " + filename)
+            # print("Found: " + filename)
             with open(os.path.join(self.mapdir, filename), 'r') as f:
                 self.maps[filename] = f.read()
 

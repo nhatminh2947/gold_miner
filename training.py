@@ -12,7 +12,7 @@ from ray.rllib.policy import Policy
 
 import arguments
 import constants
-from models import TorchRNNModel
+from models import TorchRNNModel, SecondModel
 from rllib_envs import v0
 from utils import policy_mapping
 
@@ -33,7 +33,6 @@ class MinerCallbacks(DefaultCallbacks):
                 episode.custom_metrics["{}/free".format(policy)] += 1
             episode.custom_metrics["{}/energy".format(policy)] += info["energy"]
 
-
     def on_episode_start(self, worker: RolloutWorker, base_env: BaseEnv,
                          policies: Dict[str, Policy],
                          episode: MultiAgentEpisode, **kwargs):
@@ -50,6 +49,8 @@ class MinerCallbacks(DefaultCallbacks):
             info = episode.last_info_for(agent_name)
             episode.custom_metrics["{}/gold".format(policy)] = info["gold"]
             episode.custom_metrics["{}/energy".format(policy)] /= episode.length
+            for status in constants.Status:
+                episode.custom_metrics["{}/{}".format(policy, status.name)] = int(status.name == info["death"].name)
 
 
 def initialize():
@@ -62,6 +63,7 @@ def initialize():
     }
 
     ModelCatalog.register_custom_model("1st_model", TorchRNNModel)
+    ModelCatalog.register_custom_model("2nd_model", SecondModel)
 
     tune.register_env("MinerEnv-v0", lambda x: v0.RllibMinerEnv(env_config))
 
@@ -155,6 +157,6 @@ if __name__ == "__main__":
     print(params)
 
     ray.shutdown()
-    ray.init(local_mode=params["local_mode"], memory=52428800, object_store_memory=4e10)
+    ray.init(num_cpus=4, local_mode=params["local_mode"], memory=2e10, object_store_memory=2e10)
 
     training_team()
