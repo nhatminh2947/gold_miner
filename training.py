@@ -144,6 +144,6 @@ if __name__ == "__main__":
     print(params)
 
     ray.shutdown()
-    ray.init(num_cpus=4, local_mode=params["local_mode"], memory=2e10, object_store_memory=2e10)
+    ray.init(num_cpus=4, local_mode=params["local_mode"], memory=2e9, object_store_memory=2e9)
 
     training_team()

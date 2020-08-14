@@ -27,7 +27,7 @@ class MinerEnv:
 
     def reset(self):  # start new game
         try:
-            mapID = np.random.randint(1, 6)
+            mapID = 0  # np.random.randint(1, 6)
             posID_x = np.random.randint(constants.N_COLS)
             posID_y = np.random.randint(constants.N_ROWS)
             request = ("map" + str(mapID) + "," + str(posID_x) + "," + str(posID_y) + ",50,100")

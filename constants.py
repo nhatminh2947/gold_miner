@@ -3,11 +3,11 @@ from enum import Enum
 from gym.spaces import Dict, Box, Discrete
 
 # GOLD PER MAP
-# Map 1 6500
-# Map 2 6850
-# Map 3 7300
-# Map 4 7500
-# Map 5 7100
+# Map 1 6500 - 20 gold spots
+# Map 2 6850 - 19 gold spots
+# Map 3 7300 - 23 gold spots
+# Map 4 7500 - 19 gold spots
+# Map 5 7100 - 21 gold spots
 MAX_LEN = 100
 NUM_FEATURES = 15
 N_COLS = 21

@@ -31,59 +31,6 @@ class RllibMinerEnv(MultiAgentEnv):
             self.stat[i][Metrics.ENERGY.name] = 50
         self.total_gold = 0
 
-    def print_map(self, obs):
-        width = 11
-        for i in range(constants.N_ROWS):
-            for v in range(2):
-                for j in range(constants.N_COLS):
-                    players = ""
-                    type, _ = obs.mapInfo.get_obstacle_type(j, i)
-                    text_color = ColorText.CBLACK
-                    if type is None:
-                        type = 4
-
-                    for k in range(v * 2, v * 2 + 2):
-                        if j == obs.players[k]["posx"] and i == obs.players[k]["posy"]:
-                            if k == 1 or k == 3:
-                                players += " "
-                            players += str(k) + f"[{obs.players[k]['energy']}]"
-                            text_color = ColorText.CWHITE2
-
-                    color = ColorText.CWHITEBG
-
-                    if type == 1:
-                        color = ColorText.CGREENBG
-                    elif type == 2:
-                        color = ColorText.CGREYBG
-                    elif type == 3:
-                        color = ColorText.CBLUEBG
-                    elif type == 4:
-                        color = ColorText.CYELLOWBG
-
-                    print(f"{color}{text_color}{players:{width}}{ColorText.CEND}", end="")
-                print()
-            for j in range(constants.N_COLS):
-                type, value = obs.mapInfo.get_obstacle_type(j, i)
-                text_color = ColorText.CBLACK
-                if type is None:
-                    value = obs.mapInfo.gold_amount(j, i)
-                    type = 4
-                elif type != constants.Obstacle.SWAMP.value:
-                    value = ""
-                color = ColorText.CWHITEBG
-
-                if type == 1:
-                    color = ColorText.CGREENBG
-                elif type == 2:
-                    color = ColorText.CGREYBG
-                elif type == 3:
-                    color = ColorText.CBLUEBG
-                elif type == 4:
-                    color = ColorText.CYELLOWBG
-
-                print(f"{color}{text_color}{str(value):{width}}{ColorText.CEND}", end="")
-            print()
-
     def step(self, action_dict):
         actions = []
         for i in range(4):
@@ -94,7 +41,7 @@ class RllibMinerEnv(MultiAgentEnv):
                 actions.append(Action.ACTION_FREE.value)
 
         if self.is_render:
-            self.print_map(self.prev_raw_obs)
+            utils.print_map(self.prev_raw_obs)
 
         alive_agents = list(action_dict.keys())
         raw_obs = self.env.step(','.join([str(action) for action in actions]))
