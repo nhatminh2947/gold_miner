@@ -132,10 +132,9 @@ class RllibMinerEnv(MultiAgentEnv):
 
         for i, agent_name in enumerate(self.agent_names):
             if agent_name in alive_agents:
-                sign = 1
                 rewards[agent_name] = 0
 
-                base_reward = 50 if players[i]["score"] - self.prev_players[i]["score"] == 0 \
+                base_reward = -50 if players[i]["score"] - self.prev_players[i]["score"] == 0 \
                     else players[i]["score"] - self.prev_players[i]["score"]
 
                 if players[i]["status"] != constants.Status.STATUS_STOP_END_STEP.value \
@@ -143,14 +142,10 @@ class RllibMinerEnv(MultiAgentEnv):
                     rewards[agent_name] += -1
                     continue
 
-                if players[i]["lastAction"] in [0, 1, 2, 3, 5] \
-                        and obs[agent_name]["conv_features"][12][players[i]["posy"], players[i]["posx"]]:
-                    sign = -1
-
                 if players[i]["lastAction"] == 4:
                     continue
 
-                rewards[agent_name] += sign * (players[i]["energy"] - self.prev_players[i]["energy"]) \
+                rewards[agent_name] += abs(players[i]["energy"] - self.prev_players[i]["energy"]) \
                                        / constants.BASE_ENERGY * (base_reward / self.total_gold)
 
         self.prev_players = players
