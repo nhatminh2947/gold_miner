@@ -45,7 +45,8 @@ def initialize():
         "input_size": params["input_size"],
         "host": "localhost",
         "port": 1234,
-        "evaluate": False
+        "evaluate": False,
+        "render": params["render"]
     }
 
     ModelCatalog.register_custom_model("1st_model", TorchRNNModel)
