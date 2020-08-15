@@ -9,7 +9,7 @@ from gym.spaces import Dict, Box, Discrete
 # Map 4 7500 - 19 gold spots
 # Map 5 7100 - 21 gold spots
 MAX_LEN = 100
-NUM_FEATURES = 15
+NUM_FEATURES = 14
 MAX_EXTRACTABLE_GOLD = 5000
 N_COLS = 21
 N_ROWS = 9

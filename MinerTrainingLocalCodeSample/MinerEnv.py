@@ -32,6 +32,7 @@ class MinerEnv:
             posID_x = np.random.randint(constants.N_COLS)
             posID_y = np.random.randint(constants.N_ROWS)
             request = ("map" + str(mapID) + "," + str(posID_x) + "," + str(posID_y) + ",50,100")
+            request = "map5,10,5,50,100"
             # Send the request to the game environment (GAME_SOCKET_DUMMY.py)
             print(request)
             self.send_map_info(request)
