@@ -1,5 +1,6 @@
 from typing import Dict
 
+import numpy as np
 import ray
 from ray import tune
 from ray.rllib.agents.callbacks import DefaultCallbacks
@@ -9,7 +10,7 @@ from ray.rllib.env import BaseEnv
 from ray.rllib.evaluation import MultiAgentEpisode, RolloutWorker
 from ray.rllib.models import ModelCatalog
 from ray.rllib.policy import Policy
-
+from MinerTrainingLocalCodeSample import PopulationBasedTraining
 import arguments
 import constants
 from MinerTrainingLocalCodeSample import Metrics
@@ -23,6 +24,11 @@ params = vars(args)
 
 
 class MinerCallbacks(DefaultCallbacks):
+    def __init__(self):
+        super().__init__()
+
+        self.pbt = PopulationBasedTraining(ready=params["ready"])
+
     def on_episode_end(self, worker: RolloutWorker, base_env: BaseEnv,
                        policies: Dict[str, Policy],
                        episode: MultiAgentEpisode, **kwargs):
@@ -37,6 +43,13 @@ class MinerCallbacks(DefaultCallbacks):
                            constants.Status.STATUS_ELIMINATED_WENT_OUT_MAP,
                            constants.Status.STATUS_STOP_END_STEP]:
                 episode.custom_metrics["{}/{}".format(policy, status.name)] = int(status.name == info["death"].name)
+
+    def on_train_result(self, trainer, result: dict, **kwargs):
+        if result["custom_metrics"]:
+            if result["timesteps_total"] - self.pbt.last_update >= self.pbt.ready:
+                self.pbt.run(trainer, result)
+                self.pbt.last_update = result["timesteps_total"]
+
 
 
 def initialize():
@@ -65,6 +78,9 @@ def initialize():
                 },
                 "no_final_linear": True,
             },
+            "lr": np.random.uniform(1e-5, 1e-3),
+            "clip_param": np.random.uniform(0.1, 0.3),
+            "entropy_coeff": np.random.uniform(1e-5, 1e-3),
             "framework": "torch"
         }
         return PPOTorchPolicy, constants.OBS_SPACE, constants.ACT_SPACE, config

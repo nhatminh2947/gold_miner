@@ -7,3 +7,4 @@ from .user_match import UserMatch
 from .obstacle_info import ObstacleInfo
 from .MinerEnv import MinerEnv
 from .metrics import Metrics
+from .PopulationBasedTraining import PopulationBasedTraining

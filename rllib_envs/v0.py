@@ -24,6 +24,7 @@ class RllibMinerEnv(MultiAgentEnv):
 
         self.prev_raw_obs = None
         self.prev_score = [0, 0, 0, 0]
+        self.episode_len = 0
 
         self.count_done = 0
         self.stat = []
@@ -50,10 +51,11 @@ class RllibMinerEnv(MultiAgentEnv):
 
         obs = utils.featurize(self.agent_names, alive_agents, raw_obs, self.total_gold)
         rewards = self._rewards(alive_agents, raw_obs.players, obs)
-        print(f"rewards: {rewards}")
+        # print(f"rewards: {rewards}")
 
         dones = {}
         infos = {}
+        self.episode_len += 1
 
         for i, agent_name in enumerate(self.agent_names):
             if agent_name in alive_agents:
@@ -62,6 +64,8 @@ class RllibMinerEnv(MultiAgentEnv):
                 self.stat[i][Metrics.ENERGY.name] += raw_obs.players[i]["energy"]
 
                 if raw_obs.players[i]["status"] != constants.Status.STATUS_PLAYING.value:
+                    self.stat[i][Metrics.ENERGY.name] /= self.episode_len
+
                     infos[self.agent_names[i]]["gold"] = raw_obs.players[i]["score"]
                     infos[self.agent_names[i]]["death"] = constants.Status(raw_obs.players[i]["status"])
                     infos[self.agent_names[i]]["metrics"] = self.stat[i]
@@ -103,6 +107,7 @@ class RllibMinerEnv(MultiAgentEnv):
         self.prev_score = [0, 0, 0, 0]
         self.count_done = 0
         self.prev_raw_obs = copy.deepcopy(raw_obs)
+        self.episode_len = 0
 
         self.stat = []
         for i in range(4):

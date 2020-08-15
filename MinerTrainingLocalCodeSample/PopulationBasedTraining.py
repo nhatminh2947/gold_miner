@@ -1,33 +1,21 @@
 import numpy as np
-import ray
 from ray.rllib.utils.schedules import ConstantSchedule
 
 
 class PopulationBasedTraining:
-    def __init__(self, policy_names, t_select=0.45, perturb_prob=0.1, perturb_val=0.2, burn_in=2e7,
-                 ready_num_steps=1e7):
-        self.population_size = len(policy_names)
+    def __init__(self, t_select=0.45, perturb_prob=0.1, perturb_val=0.2, burn_in=5e7, ready=5e7):
         self.t_select = t_select
         self.perturb_prob = perturb_prob
         self.perturb_val = perturb_val
-        self.policy_names = policy_names
         self.burn_in = burn_in
-        self.last_num_steps_since_evolution = {policy_name: 0 for policy_name in self.policy_names}
-        self.ready_num_steps = ready_num_steps
+        self.ready = ready
+        self.last_update = 0
 
         self.hyperparameters = {"lr": (1e-5, 1e-3),
-                                "clip_param": (0.1, 0.3)}
+                                "clip_param": (0.1, 0.3),
+                                "entropy_coeff": (0.001, 0.2)}
 
-    def select(self, player_a):
-        player_b = self.policy_names[np.random.randint(0, self.population_size)]
-        while player_b == player_a:
-            player_b = self.policy_names[np.random.randint(0, self.population_size)]
-        ers = ray.get_actor("ers")
-        if ray.get(ers.expected_score.remote(player_a, player_b)) < self.t_select:
-            return player_b
-        return None
-
-    def inherit(self, trainer, src, dest):
+    def exploit(self, trainer, src, dest):
         self.copy_weight(trainer, src, dest)
 
     def copy_weight(self, trainer, src, dest):
@@ -52,6 +40,9 @@ class PopulationBasedTraining:
         new_clip_param = self.explore_helper(policy.config["clip_param"], self.hyperparameters["clip_param"])
         policy.config["clip_param"] = new_clip_param
 
+        new_entropy_coeff = self.explore_helper(policy.config["entropy_coeff"], self.hyperparameters["entropy_coeff"])
+        policy.config["entropy_coeff"] = new_entropy_coeff
+
     def explore_helper(self, old_value, range):
         if np.random.random() > self.perturb_prob:  # resample
             return np.random.uniform(low=range[0], high=range[1], size=None)
@@ -61,27 +52,21 @@ class PopulationBasedTraining:
 
         return old_value * (1 + self.perturb_val)
 
-    def is_eligible(self, policy_name):
-        ers = ray.get_actor("ers")
-        num_steps = ray.get(ers.get_num_steps.remote(policy_name))
+    def run(self, trainer, result):
+        max_average_gold = -1
+        min_average_gold = 10000
 
-        if num_steps >= self.burn_in:
-            return num_steps - self.last_num_steps_since_evolution[policy_name] > self.ready_num_steps
+        weakest_agent = None
+        strongest_agent = None
 
-        return False
+        for i in range(4):
+            if result["custom_metrics"][f"policy_{i}/gold_mean"] < min_average_gold:
+                min_average_gold = result["custom_metrics"][f"policy_{i}/gold_mean"]
+                weakest_agent = i
 
-    def run(self, trainer):
-        ers = ray.get_actor("ers")
-        population = ray.get(ers.population)
+            if result["custom_metrics"][f"policy_{i}/gold_mean"] > max_average_gold:
+                max_average_gold = result["custom_metrics"][f"policy_{i}/gold_mean"]
+                strongest_agent = i
 
-        trainer.get_weights()
-
-        for policy_name in self.policy_names:
-            if self.is_eligible(policy_name):
-                parent_policy = self.select(policy_name)
-                if parent_policy is not None:
-                    self.inherit(trainer, parent_policy, policy_name)
-                    self.explore(trainer, policy_name)
-                    ers = ray.get_actor("ers")
-                    num_steps = ray.get(ers.get_num_steps.remote(policy_name))
-                    self.last_num_steps_since_evolution[policy_name] = num_steps
+        self.exploit(trainer, f"policy_{strongest_agent}", f"policy_{weakest_agent}")
+        self.explore(trainer, f"policy_{weakest_agent}")

@@ -43,6 +43,6 @@ def get_parser():
     parser.add_argument("--filter", type=str, default="MeanStdFilter")
     parser.add_argument("--custom_model", type=str)
     parser.add_argument("--input_size", type=int, default=11)
-
+    parser.add_argument("--ready", type=float, default=5e7)
 
     return parser
