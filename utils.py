@@ -83,36 +83,47 @@ def featurize(agent_names, alive_agents, obs, total_gold):
 
 
 def print_map(obs):
-    width = 11
+    width = 8
+    print(f"Steps: {obs.stepCount}")
+    print(f"Energy ", end='')
+    for i in range(4):
+        print(f"({i}):{obs.players[i]['energy']:5}\t", end='')
+    print()
+
+    print(f"Gold   ", end='')
+    for i in range(4):
+        print(f"({i}):{obs.players[i]['score']:5}\t", end='')
+    print()
+
     for i in range(constants.N_ROWS):
-        for v in range(2):
-            for j in range(constants.N_COLS):
-                players = ""
-                type, _ = obs.mapInfo.get_obstacle_type(j, i)
-                text_color = ColorText.CBLACK
-                if type is None:
-                    type = 4
+        for j in range(constants.N_COLS):
+            players = ""
+            type, _ = obs.mapInfo.get_obstacle_type(j, i)
+            text_color = ColorText.CBLACK
+            if type is None:
+                type = 4
 
-                for k in range(v * 2, v * 2 + 2):
-                    if j == obs.players[k]["posx"] and i == obs.players[k]["posy"]:
-                        if k == 1 or k == 3:
-                            players += " "
-                        players += str(k) + f"[{obs.players[k]['energy']}]"
-                        text_color = ColorText.CWHITE2
+            for k in range(4):
+                if j == obs.players[k]["posx"] and i == obs.players[k]["posy"]:
+                    if k != 0:
+                        players += " "
+                    players += str(k)
+                    text_color = ColorText.CWHITE2
 
-                color = ColorText.CWHITEBG
+            color = ColorText.CWHITEBG
 
-                if type == 1:
-                    color = ColorText.CGREENBG
-                elif type == 2:
-                    color = ColorText.CGREYBG
-                elif type == 3:
-                    color = ColorText.CBLUEBG
-                elif type == 4:
-                    color = ColorText.CYELLOWBG
+            if type == 1:
+                color = ColorText.CGREENBG
+            elif type == 2:
+                color = ColorText.CGREYBG
+            elif type == 3:
+                color = ColorText.CBLUEBG
+            elif type == 4:
+                color = ColorText.CYELLOWBG
 
-                print(f"{color}{text_color}{players:{width}}{ColorText.CEND}", end="")
-            print()
+            print(f"{color}{text_color}{players:{width}}{ColorText.CEND}", end="")
+        print()
+
         for j in range(constants.N_COLS):
             type, value = obs.mapInfo.get_obstacle_type(j, i)
             text_color = ColorText.CBLACK
