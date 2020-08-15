@@ -48,8 +48,8 @@ class RllibMinerEnv(MultiAgentEnv):
         obs = utils.featurize(self.agent_names, alive_agents, raw_obs, self.total_gold)
         rewards = self._rewards(alive_agents, raw_obs.players, obs)
 
-        # print(f"action: {[constants.Action(action).name for action in actions]}")
-        # print(f"rewards: {rewards}")
+        print(f"action: {[constants.Action(action).name for action in actions]}")
+        print(f"rewards: {rewards}")
 
         dones = {}
         infos = {}
@@ -79,24 +79,12 @@ class RllibMinerEnv(MultiAgentEnv):
         for i, agent_name in enumerate(self.agent_names):
             if agent_name in alive_agents:
                 rewards[agent_name] = 0
-
-                base_reward = -50 if players[i]["score"] - self.prev_players[i]["score"] == 0 \
-                    else players[i]["score"] - self.prev_players[i]["score"]
-
-                if players[i]["status"] != constants.Status.STATUS_STOP_END_STEP.value \
-                        and players[i]["status"] != constants.Status.STATUS_PLAYING.value:
-                    rewards[agent_name] += -(1 - players[i]["score"])
+                if players[i]["status"] not in [constants.Status.STATUS_STOP_END_STEP.value,
+                                                constants.Status.STATUS_PLAYING.value]:
+                    rewards[agent_name] = -1
                     continue
-
-                if players[i]["lastAction"] == 4:
-                    continue
-
-                if players[i]["lastAction"] in [0, 1, 2, 3] \
-                        and obs[agent_name]["conv_features"][12][players[i]["posy"], players[i]["posx"]]:
-                    base_reward = 50
-
-                rewards[agent_name] += abs(players[i]["energy"] - self.prev_players[i]["energy"]) \
-                                       / constants.BASE_ENERGY * (base_reward / self.total_gold)
+                elif players[i]["status"] == constants.Status.STATUS_STOP_END_STEP.value:
+                    rewards[agent_name] = 1 + players[i]["score"] / self.total_gold
 
         self.prev_players = players
 

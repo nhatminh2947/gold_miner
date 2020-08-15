@@ -139,6 +139,7 @@ def print_map(obs):
 
             print(f"{color}{text_color}{str(value):{width}}{ColorText.CEND}", end="")
         print()
+    print()
 
 
 def generate_map():
