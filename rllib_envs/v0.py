@@ -81,10 +81,10 @@ class RllibMinerEnv(MultiAgentEnv):
                 rewards[agent_name] = 0
                 if players[i]["status"] not in [constants.Status.STATUS_STOP_END_STEP.value,
                                                 constants.Status.STATUS_PLAYING.value]:
-                    rewards[agent_name] = -1
+                    rewards[agent_name] = -1 + players[i]["score"] / constants.MAX_EXTRACTABLE_GOLD
                     continue
                 elif players[i]["status"] == constants.Status.STATUS_STOP_END_STEP.value:
-                    rewards[agent_name] = 1 + players[i]["score"] / self.total_gold
+                    rewards[agent_name] = players[i]["score"] / constants.MAX_EXTRACTABLE_GOLD
 
         self.prev_players = players
 
