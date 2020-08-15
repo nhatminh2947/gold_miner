@@ -61,7 +61,7 @@ class RllibMinerEnv(MultiAgentEnv):
                 self.stat[i][Metrics.ENERGY.name] += raw_obs.players[i]["energy"]
 
                 if raw_obs.players[i]["status"] != constants.Status.STATUS_PLAYING.value:
-                    infos[self.agent_names[i]]["gold"] = self.prev_players[i]["score"]
+                    infos[self.agent_names[i]]["gold"] = raw_obs.players[i]["score"]
                     infos[self.agent_names[i]]["death"] = constants.Status(raw_obs.players[i]["status"])
                     infos[self.agent_names[i]]["metrics"] = self.stat[i]
                     dones[self.agent_names[i]] = True
@@ -78,17 +78,19 @@ class RllibMinerEnv(MultiAgentEnv):
 
         for i, agent_name in enumerate(self.agent_names):
             if agent_name in alive_agents:
-                rewards[agent_name] = 0
+                rewards[agent_name] = (players[i]["score"] - self.prev_raw_obs.players[i]["score"]) \
+                                      / constants.MAX_EXTRACTABLE_GOLD
+
                 if players[i]["status"] not in [constants.Status.STATUS_STOP_END_STEP.value,
                                                 constants.Status.STATUS_PLAYING.value]:
-                    rewards[agent_name] = -1 + players[i]["score"] / constants.MAX_EXTRACTABLE_GOLD
-                    continue
-                elif players[i]["status"] == constants.Status.STATUS_STOP_END_STEP.value:
-                    rewards[agent_name] = players[i]["score"] / constants.MAX_EXTRACTABLE_GOLD
+                    rewards[agent_name] = -1
 
         self.prev_players = players
 
         return rewards
+
+    # def _exporation_reward(self, alive_agents, players, obs):
+    #
 
     def reset(self):
         raw_obs = self.env.reset()

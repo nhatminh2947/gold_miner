@@ -47,9 +47,7 @@ def featurize(agent_names, alive_agents, obs, total_gold):
             obstacle_value_min[i, j] = (-value if value != 0 else 5) / constants.MAX_ENERGY
             obstacle_value_max[i, j] = (-value if value != 0 else 20) / constants.MAX_ENERGY
 
-            gold_amount[i, j] = obs.mapInfo.gold_amount(j, i) / total_gold
-
-    max_extractable_gold = gold_amount.copy()
+            gold_amount[i, j] = obs.mapInfo.gold_amount(j, i) / constants.MAX_EXTRACTABLE_GOLD
 
     count_pos = {}
 
@@ -60,12 +58,9 @@ def featurize(agent_names, alive_agents, obs, total_gold):
                 count_pos[obs.players[i]["posy"], obs.players[i]["posx"]] = 0
             count_pos[obs.players[i]["posy"], obs.players[i]["posx"]] += 1
 
-    for i in count_pos:
-        max_extractable_gold[i] = max_extractable_gold[i] / count_pos[i]
-
     board = np.stack(
         [obstacle_random, obstacle_1, obstacle_5, obstacle_10, obstacle_40, obstacle_100, obstacle_value_min,
-         obstacle_value_max, gold, gold_amount, max_extractable_gold])
+         obstacle_value_max, gold, gold_amount])
     board = np.concatenate([players, board])
 
     featurized_obs = {}
