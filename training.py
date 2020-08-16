@@ -15,7 +15,7 @@ import arguments
 import constants
 from MinerTrainingLocalCodeSample import Metrics
 from MinerTrainingLocalCodeSample import PopulationBasedTraining
-from models import TorchRNNModel, SecondModel
+from models import TorchRNNModel, SecondModel, ThirdModel
 from rllib_envs import v0
 from utils import policy_mapping
 
@@ -55,6 +55,7 @@ class MinerCallbacks(DefaultCallbacks):
 def register(env_config):
     ModelCatalog.register_custom_model("1st_model", TorchRNNModel)
     ModelCatalog.register_custom_model("2nd_model", SecondModel)
+    ModelCatalog.register_custom_model("3rd_model", ThirdModel)
 
     tune.register_env("MinerEnv-v0", lambda x: v0.RllibMinerEnv(env_config))
 

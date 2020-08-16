@@ -1,3 +1,4 @@
+import numpy as np
 from ray.rllib.models.modelv2 import ModelV2
 from ray.rllib.models.torch.torch_modelv2 import TorchModelV2
 from ray.rllib.utils import try_import_torch
@@ -63,6 +64,9 @@ class SecondModel(TorchModelV2, nn.Module):
         logits = self.actor_layers(self._shared_layer_out)
 
         return logits, state
+
+    def predict(self, input_dict):
+        return torch.argmax(self.forward(input_dict, [], None)[0]).item()
 
     def value_function(self):
         return torch.reshape(self.critic_layers(self._shared_layer_out), [-1])
