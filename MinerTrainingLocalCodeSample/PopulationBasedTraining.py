@@ -3,8 +3,7 @@ from ray.rllib.utils.schedules import ConstantSchedule
 
 
 class PopulationBasedTraining:
-    def __init__(self, t_select=0.45, perturb_prob=0.1, perturb_val=0.2, burn_in=5e7, ready=5e7):
-        self.t_select = t_select
+    def __init__(self, perturb_prob=0.1, perturb_val=0.2, burn_in=5e7, ready=5e7):
         self.perturb_prob = perturb_prob
         self.perturb_val = perturb_val
         self.burn_in = burn_in

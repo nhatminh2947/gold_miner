@@ -10,10 +10,11 @@ from ray.rllib.env import BaseEnv
 from ray.rllib.evaluation import MultiAgentEpisode, RolloutWorker
 from ray.rllib.models import ModelCatalog
 from ray.rllib.policy import Policy
-from MinerTrainingLocalCodeSample import PopulationBasedTraining
+
 import arguments
 import constants
 from MinerTrainingLocalCodeSample import Metrics
+from MinerTrainingLocalCodeSample import PopulationBasedTraining
 from models import TorchRNNModel, SecondModel
 from rllib_envs import v0
 from utils import policy_mapping
@@ -51,6 +52,12 @@ class MinerCallbacks(DefaultCallbacks):
                 self.pbt.last_update = result["timesteps_total"]
 
 
+def register(env_config):
+    ModelCatalog.register_custom_model("1st_model", TorchRNNModel)
+    ModelCatalog.register_custom_model("2nd_model", SecondModel)
+
+    tune.register_env("MinerEnv-v0", lambda x: v0.RllibMinerEnv(env_config))
+
 
 def initialize():
     env_config = {
@@ -62,10 +69,7 @@ def initialize():
         "render": params["render"]
     }
 
-    ModelCatalog.register_custom_model("1st_model", TorchRNNModel)
-    ModelCatalog.register_custom_model("2nd_model", SecondModel)
-
-    tune.register_env("MinerEnv-v0", lambda x: v0.RllibMinerEnv(env_config))
+    register(env_config)
 
     # Policy setting
     def gen_policy():
