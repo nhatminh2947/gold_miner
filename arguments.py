@@ -36,13 +36,12 @@ def get_parser():
     parser.add_argument("--time_attr", type=str, default="timesteps_total")
     parser.add_argument("--validate", action="store_true")
     parser.add_argument("--use_rnd", action="store_true")
-    parser.add_argument("--populations", type=int, default=2)
     parser.add_argument("--ray_env", type=str, default="MinerEnv-v0")
     parser.add_argument("--kl_target", type=float, default=0.01)
     parser.add_argument("--timesteps_total", type=int, default=1000000000)
-    parser.add_argument("--filter", type=str, default="MeanStdFilter")
+    parser.add_argument("--filter", type=str, default="NoFilter")
     parser.add_argument("--custom_model", type=str)
-    parser.add_argument("--input_size", type=int, default=11)
     parser.add_argument("--ready", type=float, default=5e7)
+    parser.add_argument("--max_seq_len", type=int, default=100)
 
     return parser

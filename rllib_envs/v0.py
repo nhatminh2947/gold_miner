@@ -49,9 +49,9 @@ class RllibMinerEnv(MultiAgentEnv):
         alive_agents = list(action_dict.keys())
         raw_obs = self.env.step(','.join([str(action) for action in actions]))
 
-        obs = utils.featurize(self.agent_names, alive_agents, raw_obs, self.total_gold)
-        rewards = self._rewards(alive_agents, raw_obs.players, obs)
-        # print(f"rewards: {rewards}")
+        obs = utils.featurize_v1(self.agent_names, alive_agents, raw_obs, self.total_gold)
+        rewards = self._rewards(alive_agents, raw_obs.players)
+        print(f"rewards: {rewards}")
 
         dones = {}
         infos = {}
@@ -78,7 +78,7 @@ class RllibMinerEnv(MultiAgentEnv):
         # print("dones", dones)
         return obs, rewards, dones, infos
 
-    def _rewards(self, alive_agents, players, obs):
+    def _rewards(self, alive_agents, players):
         rewards = {}
 
         for i, agent_name in enumerate(self.agent_names):
@@ -86,8 +86,13 @@ class RllibMinerEnv(MultiAgentEnv):
                 rewards[agent_name] = (players[i]["score"] - self.prev_score[i]) * 1.0 \
                                       / constants.MAX_EXTRACTABLE_GOLD
 
-                if players[i]["status"] not in [constants.Status.STATUS_STOP_END_STEP.value,
-                                                constants.Status.STATUS_PLAYING.value]:
+                if players[i]["status"] == constants.Status.STATUS_STOP_END_STEP.value:
+                    max_score = max([players[j]["score"] for j in range(4)])
+                    if players[i]["score"] == max_score:
+                        rewards[agent_name] = 1
+                    else:
+                        rewards[agent_name] = -1 + players[i]["score"] / constants.MAX_EXTRACTABLE_GOLD
+                elif players[i]["status"] != constants.Status.STATUS_PLAYING.value:
                     rewards[agent_name] = -1
 
                 self.prev_score[i] = players[i]["score"]
@@ -114,4 +119,4 @@ class RllibMinerEnv(MultiAgentEnv):
             self.stat.append({metric.name: 0 for metric in Metrics})
             self.stat[i][Metrics.ENERGY.name] = 50
 
-        return utils.featurize(self.agent_names, self.agent_names, raw_obs, self.total_gold)
+        return utils.featurize_v1(self.agent_names, self.agent_names, raw_obs, self.total_gold)

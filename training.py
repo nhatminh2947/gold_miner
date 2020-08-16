@@ -63,7 +63,6 @@ def register(env_config):
 def initialize():
     env_config = {
         "game_state_file": params["game_state_file"],
-        "input_size": params["input_size"],
         "host": "localhost",
         "port": 1234,
         "evaluate": False,
@@ -76,10 +75,10 @@ def initialize():
     def gen_policy():
         config = {
             "model": {
+                "max_seq_len": params["max_seq_len"],
                 "custom_model": params["custom_model"],
                 "custom_model_config": {
                     "in_channels": constants.NUM_FEATURES,
-                    "input_size": params["input_size"]
                 },
                 "no_final_linear": True,
             },
