@@ -36,14 +36,15 @@ class MinerCallbacks(DefaultCallbacks):
 
         for (agent_name, policy), v in episode.agent_rewards.items():
             info = episode.last_info_for(agent_name)
-            episode.custom_metrics["{}/gold".format(policy)] = info["gold"]
+            episode.custom_metrics[f"{policy}/gold"] = info["gold"]
+            episode.custom_metrics[f"{policy}/win"] = info["win"]
             for key in Metrics:
                 episode.custom_metrics[f"{policy}/{key.name}"] = info["metrics"][key.name]
 
             for status in [constants.Status.STATUS_ELIMINATED_OUT_OF_ENERGY,
                            constants.Status.STATUS_ELIMINATED_WENT_OUT_MAP,
                            constants.Status.STATUS_STOP_END_STEP]:
-                episode.custom_metrics["{}/{}".format(policy, status.name)] = int(status.name == info["death"].name)
+                episode.custom_metrics[f"{policy}/{status.name}"] = int(status.name == info["death"].name)
 
     def on_train_result(self, trainer, result: dict, **kwargs):
         if result["custom_metrics"]:

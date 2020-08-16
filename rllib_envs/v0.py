@@ -50,7 +50,7 @@ class RllibMinerEnv(MultiAgentEnv):
         raw_obs = self.env.step(','.join([str(action) for action in actions]))
 
         obs = utils.featurize_v1(self.agent_names, alive_agents, raw_obs, self.total_gold)
-        rewards = self._rewards(alive_agents, raw_obs.players)
+        rewards, win_loss = self._rewards(alive_agents, raw_obs.players)
         print(f"rewards: {rewards}")
 
         dones = {}
@@ -65,7 +65,7 @@ class RllibMinerEnv(MultiAgentEnv):
 
                 if raw_obs.players[i]["status"] != constants.Status.STATUS_PLAYING.value:
                     self.stat[i][Metrics.ENERGY.name] /= self.episode_len
-
+                    infos[self.agent_names[i]]["win"] = win_loss[self.agent_names[i]]
                     infos[self.agent_names[i]]["gold"] = raw_obs.players[i]["score"]
                     infos[self.agent_names[i]]["death"] = constants.Status(raw_obs.players[i]["status"])
                     infos[self.agent_names[i]]["metrics"] = self.stat[i]
@@ -80,6 +80,7 @@ class RllibMinerEnv(MultiAgentEnv):
 
     def _rewards(self, alive_agents, players):
         rewards = {}
+        win_loss = {}
 
         for i, agent_name in enumerate(self.agent_names):
             if agent_name in alive_agents:
@@ -90,14 +91,17 @@ class RllibMinerEnv(MultiAgentEnv):
                     max_score = max([players[j]["score"] for j in range(4)])
                     if players[i]["score"] == max_score:
                         rewards[agent_name] = 1
+                        win_loss[agent_name] = 1
                     else:
                         rewards[agent_name] = -1 + players[i]["score"] / constants.MAX_EXTRACTABLE_GOLD
+                        win_loss[agent_name] = 0
                 elif players[i]["status"] != constants.Status.STATUS_PLAYING.value:
                     rewards[agent_name] = -1
+                    win_loss[agent_name] = 0
 
                 self.prev_score[i] = players[i]["score"]
 
-        return rewards
+        return rewards, win_loss
 
     # def _exporation_reward(self, alive_agents, players, obs):
     #
