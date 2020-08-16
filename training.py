@@ -52,6 +52,10 @@ class MinerCallbacks(DefaultCallbacks):
                 self.pbt.run(trainer, result)
                 self.pbt.last_update = result["timesteps_total"]
 
+            for i in range(4):
+                result["custom_metrics"][f"policy_{i}/clip_param"] \
+                    = trainer.get_policy(f"policy_{i}").config["clip_param"]
+
 
 def register(env_config):
     ModelCatalog.register_custom_model("1st_model", TorchRNNModel)

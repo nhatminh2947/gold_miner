@@ -3,7 +3,7 @@ from ray.rllib.utils.schedules import ConstantSchedule
 
 
 class PopulationBasedTraining:
-    def __init__(self, perturb_prob=0.1, perturb_val=0.2, burn_in=5e7, ready=5e7):
+    def __init__(self, perturb_prob=0.2, perturb_val=0.2, burn_in=5e7, ready=5e7):
         self.perturb_prob = perturb_prob
         self.perturb_val = perturb_val
         self.burn_in = burn_in
@@ -40,7 +40,9 @@ class PopulationBasedTraining:
         policy.config["clip_param"] = new_clip_param
 
         new_entropy_coeff = self.explore_helper(policy.config["entropy_coeff"], self.hyperparameters["entropy_coeff"])
-        policy.config["entropy_coeff"] = new_entropy_coeff
+        policy.entropy_coeff_schedule = ConstantSchedule(new_entropy_coeff, framework="torch")
+
+        return {"lr": new_lr, "clip_param": new_clip_param, "entropy_coeff": new_entropy_coeff}
 
     def explore_helper(self, old_value, range):
         if np.random.random() > self.perturb_prob:  # resample
@@ -68,4 +70,6 @@ class PopulationBasedTraining:
                 strongest_agent = i
 
         self.exploit(trainer, f"policy_{strongest_agent}", f"policy_{weakest_agent}")
-        self.explore(trainer, f"policy_{weakest_agent}")
+        new_params = self.explore(trainer, f"policy_{weakest_agent}")
+
+        return f"policy_{weakest_agent}", new_params
