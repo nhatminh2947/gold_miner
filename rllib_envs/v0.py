@@ -76,13 +76,18 @@ class RllibMinerEnv(MultiAgentEnv):
         self.prev_raw_obs = copy.deepcopy(raw_obs)
         # print("alive", list(action_dict.keys()))
         # print("dones", dones)
+
+        if self.is_render:
+            print(f"Energy ", end='')
+            for i in range(4):
+                print(f"({i}):{raw_obs.players[i]['energy']:5}\t", end='')
+            print()
+
         return obs, rewards, dones, infos
 
     def _rewards(self, alive_agents, players):
         rewards = {}
         win_loss = {}
-
-        end_step = False
 
         max_score = -1
         max_energy = -1
@@ -90,6 +95,7 @@ class RllibMinerEnv(MultiAgentEnv):
             if agent_name in alive_agents:
                 if max_score < players[i]["score"]:
                     max_score = players[i]["score"]
+                    max_energy = players[i]["energy"]
                 elif max_score == players[i]["score"] and max_energy < players[i]["energy"]:
                     max_energy = players[i]["energy"]
 
