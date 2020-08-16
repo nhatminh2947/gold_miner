@@ -64,7 +64,7 @@ class RllibMinerEnv(MultiAgentEnv):
                 self.stat[i][Metrics.ENERGY.name] += raw_obs.players[i]["energy"]
 
                 if raw_obs.players[i]["status"] != constants.Status.STATUS_PLAYING.value:
-                    self.stat[i][Metrics.ENERGY.name] /= self.episode_len
+                    self.stat[i][Metrics.ENERGY.name] /= (self.episode_len + 1)
                     infos[self.agent_names[i]]["win"] = win_loss[self.agent_names[i]]
                     infos[self.agent_names[i]]["gold"] = raw_obs.players[i]["score"]
                     infos[self.agent_names[i]]["death"] = constants.Status(raw_obs.players[i]["status"])
@@ -82,16 +82,30 @@ class RllibMinerEnv(MultiAgentEnv):
         rewards = {}
         win_loss = {}
 
+        end_step = False
+
+        max_score = -1
+        max_energy = -1
+        for i, agent_name in enumerate(self.agent_names):
+            if agent_name in alive_agents:
+                if max_score < players[i]["score"]:
+                    max_score = players[i]["score"]
+                elif max_score == players[i]["score"] and max_energy < players[i]["energy"]:
+                    max_energy = players[i]["energy"]
+
         for i, agent_name in enumerate(self.agent_names):
             if agent_name in alive_agents:
                 rewards[agent_name] = (players[i]["score"] - self.prev_score[i]) * 1.0 \
                                       / constants.MAX_EXTRACTABLE_GOLD
 
                 if players[i]["status"] == constants.Status.STATUS_STOP_END_STEP.value:
-                    max_score = max([players[j]["score"] for j in range(4)])
                     if players[i]["score"] == max_score:
-                        rewards[agent_name] = 1
-                        win_loss[agent_name] = 1
+                        if players[i]["energy"] >= max_energy:
+                            rewards[agent_name] = 1
+                            win_loss[agent_name] = 1
+                        else:
+                            rewards[agent_name] = -1 + players[i]["score"] / constants.MAX_EXTRACTABLE_GOLD
+                            win_loss[agent_name] = 0
                     else:
                         rewards[agent_name] = -1 + players[i]["score"] / constants.MAX_EXTRACTABLE_GOLD
                         win_loss[agent_name] = 0
