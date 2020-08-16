@@ -51,7 +51,6 @@ class RllibMinerEnv(MultiAgentEnv):
 
         obs = utils.featurize_v1(self.agent_names, alive_agents, raw_obs, self.total_gold)
         rewards, win_loss = self._rewards(alive_agents, raw_obs.players)
-        print(f"rewards: {rewards}")
 
         dones = {}
         infos = {}
@@ -78,6 +77,7 @@ class RllibMinerEnv(MultiAgentEnv):
         # print("dones", dones)
 
         if self.is_render:
+            print(f"rewards: {rewards}")
             print(f"Energy ", end='')
             for i in range(4):
                 print(f"({i}):{raw_obs.players[i]['energy']:5}\t", end='')
