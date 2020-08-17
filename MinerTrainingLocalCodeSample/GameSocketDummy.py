@@ -23,7 +23,7 @@ class GameSocket:
     def __init__(self, host, port):
         self.stepCount = 0
         self.maxStep = 0
-        self.mapdir = "/home/lucius/working/projects/gold_miner/MinerTrainingLocalCodeSample/Maps"  # where to load all pre-defined maps
+        self.mapdir = "/mnt/nfs/work/nhatminh2947/working/gold_miner/MinerTrainingLocalCodeSample/Maps"  # where to load all pre-defined maps
         self.mapid = ""
         self.userMatch = UserMatch()
         self.users = [PlayerInfo(i) for i in range(4)]

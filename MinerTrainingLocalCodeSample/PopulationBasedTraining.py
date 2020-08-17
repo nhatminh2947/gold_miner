@@ -12,7 +12,7 @@ class PopulationBasedTraining:
 
         self.hyperparameters = {"lr": (1e-5, 1e-3),
                                 "clip_param": (0.1, 0.3),
-                                "entropy_coeff": (0.001, 0.2)}
+                                "entropy_coeff": (1e-3, 1e-1)}
 
     def exploit(self, trainer, src, dest):
         self.copy_weight(trainer, src, dest)

@@ -105,7 +105,10 @@ class RllibMinerEnv(MultiAgentEnv):
                                       / constants.MAX_EXTRACTABLE_GOLD
 
                 if players[i]["status"] == constants.Status.STATUS_STOP_END_STEP.value:
-                    if players[i]["score"] == max_score:
+                    if players[i]["score"] == 0:
+                        rewards[agent_name] = -1
+                        win_loss[agent_name] = 0
+                    elif players[i]["score"] == max_score:
                         if players[i]["energy"] >= max_energy:
                             rewards[agent_name] = 1
                             win_loss[agent_name] = 1
