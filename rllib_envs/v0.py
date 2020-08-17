@@ -50,7 +50,7 @@ class RllibMinerEnv(MultiAgentEnv):
         raw_obs = self.env.step(','.join([str(action) for action in actions]))
 
         obs = utils.featurize_v1(self.agent_names, alive_agents, raw_obs, self.total_gold)
-        rewards, win_loss = self._rewards(alive_agents, raw_obs.players)
+        rewards, win_loss = self._rewards(alive_agents, raw_obs.players, obs)
 
         dones = {}
         infos = {}
@@ -83,7 +83,7 @@ class RllibMinerEnv(MultiAgentEnv):
 
         return obs, rewards, dones, infos
 
-    def _rewards(self, alive_agents, players):
+    def _rewards(self, alive_agents, players, obs):
         rewards = {}
         win_loss = {}
 
@@ -120,6 +120,10 @@ class RllibMinerEnv(MultiAgentEnv):
                 elif players[i]["status"] != constants.Status.STATUS_PLAYING.value:
                     rewards[agent_name] = -1
                     win_loss[agent_name] = 0
+
+                if players[i]["lastAction"] == constants.Action.ACTION_CRAFT.value \
+                        and obs[agent_name]["conv_features"][11][players[i]["posy"], players[i]["posx"]] == 0:
+                    rewards[agent_name] -= 0.01
 
                 self.prev_score[i] = players[i]["score"]
 
