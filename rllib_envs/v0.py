@@ -4,8 +4,8 @@ from ray.rllib.env.multi_agent_env import MultiAgentEnv
 
 import constants
 import utils
-from MinerTrainingLocalCodeSample import Metrics
-from MinerTrainingLocalCodeSample import MinerEnv
+from MinerTraining import Metrics
+from MinerTraining import MinerEnv
 from constants import Action
 
 
@@ -66,15 +66,13 @@ class RllibMinerEnv(MultiAgentEnv):
                     self.stat[i][Metrics.ENERGY.name] /= (self.episode_len + 1)
                     infos[self.agent_names[i]]["win"] = win_loss[self.agent_names[i]]
                     infos[self.agent_names[i]]["gold"] = raw_obs.players[i]["score"]
-                    infos[self.agent_names[i]]["death"] = constants.Status(raw_obs.players[i]["status"])
+                    infos[self.agent_names[i]]["status"] = constants.Status(raw_obs.players[i]["status"])
                     infos[self.agent_names[i]]["metrics"] = self.stat[i]
                     dones[self.agent_names[i]] = True
                     self.count_done += 1
 
         dones["__all__"] = self.count_done == 4
         self.prev_raw_obs = copy.deepcopy(raw_obs)
-        # print("alive", list(action_dict.keys()))
-        # print("dones", dones)
 
         if self.is_render:
             print(f"rewards: {rewards}")
@@ -104,7 +102,8 @@ class RllibMinerEnv(MultiAgentEnv):
                 rewards[agent_name] = (players[i]["score"] - self.prev_score[i]) * 1.0 \
                                       / constants.MAX_EXTRACTABLE_GOLD
 
-                if players[i]["status"] == constants.Status.STATUS_STOP_END_STEP.value:
+                if players[i]["status"] in [constants.Status.STATUS_STOP_END_STEP.value,
+                                            constants.Status.STATUS_STOP_EMPTY_GOLD.value]:
                     if players[i]["score"] == 0:
                         rewards[agent_name] = -1
                         win_loss[agent_name] = 0

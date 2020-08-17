@@ -1,8 +1,8 @@
 import numpy as np
 
 import constants
-from .GameSocketDummy import GameSocket  # in testing version, please use GameSocket instead of GAME_SOCKET_DUMMY
-from .MinerState import State
+from .game_socket_dummy import GameSocket  # in testing version, please use GameSocket instead of GAME_SOCKET_DUMMY
+from .miner_state import State
 
 TreeID = 1
 TrapID = 2

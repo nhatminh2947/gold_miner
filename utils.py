@@ -243,7 +243,7 @@ def generate_map():
         n_gold_spots -= 1
 
     print(map)
-    with open("./MinerTrainingLocalCodeSample/Maps/map0", "w") as f:
+    with open("resources/Maps", "w") as f:
         import json
         json.dump(map.tolist(), f)
 

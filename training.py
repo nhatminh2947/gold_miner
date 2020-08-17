@@ -13,8 +13,8 @@ from ray.rllib.policy import Policy
 
 import arguments
 import constants
-from MinerTrainingLocalCodeSample import Metrics
-from MinerTrainingLocalCodeSample import PopulationBasedTraining
+from MinerTraining import Metrics
+from MinerTraining import PopulationBasedTraining
 from models import TorchRNNModel, SecondModel, ThirdModel
 from rllib_envs import v0
 from utils import policy_mapping
@@ -43,8 +43,9 @@ class MinerCallbacks(DefaultCallbacks):
 
             for status in [constants.Status.STATUS_ELIMINATED_OUT_OF_ENERGY,
                            constants.Status.STATUS_ELIMINATED_WENT_OUT_MAP,
-                           constants.Status.STATUS_STOP_END_STEP]:
-                episode.custom_metrics[f"{policy}/{status.name}"] = int(status.name == info["death"].name)
+                           constants.Status.STATUS_STOP_END_STEP,
+                           constants.Status.STATUS_STOP_EMPTY_GOLD]:
+                episode.custom_metrics[f"{policy}/{status.name}"] = int(status.name == info["status"].name)
 
     def on_train_result(self, trainer, result: dict, **kwargs):
         if result["custom_metrics"]:
