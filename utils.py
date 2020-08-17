@@ -83,6 +83,7 @@ def featurize_v1(agent_names, alive_agents, obs, total_gold):
     obstacle_random = np.zeros([obs.mapInfo.height + 1, obs.mapInfo.width + 1], dtype=float)
     obstacle_5 = np.zeros([obs.mapInfo.height + 1, obs.mapInfo.width + 1], dtype=float)
     obstacle_10 = np.zeros([obs.mapInfo.height + 1, obs.mapInfo.width + 1], dtype=float)
+    obstacle_20 = np.zeros([obs.mapInfo.height + 1, obs.mapInfo.width + 1], dtype=float)
     obstacle_40 = np.zeros([obs.mapInfo.height + 1, obs.mapInfo.width + 1], dtype=float)
     obstacle_100 = np.zeros([obs.mapInfo.height + 1, obs.mapInfo.width + 1], dtype=float)
     obstacle_value_min = np.zeros([obs.mapInfo.height + 1, obs.mapInfo.width + 1], dtype=float)
@@ -102,6 +103,8 @@ def featurize_v1(agent_names, alive_agents, obs, total_gold):
                 obstacle_5[i, j] = 1
             if value == -10:
                 obstacle_10[i, j] = 1
+            if value == -20:
+                obstacle_20[i, j] = 1
             if value == -40:
                 obstacle_40[i, j] = 1
             if value == -100:
@@ -110,9 +113,6 @@ def featurize_v1(agent_names, alive_agents, obs, total_gold):
                 gold[i, j] = 1
                 value = -4
 
-            obstacle_value_min[i, j] = (-value if value != 0 else 5) / constants.MAX_ENERGY
-            obstacle_value_max[i, j] = (-value if value != 0 else 20) / constants.MAX_ENERGY
-
             gold_amount[i, j] = obs.mapInfo.gold_amount(j, i) / total_gold
 
     for i in range(4):
@@ -120,8 +120,15 @@ def featurize_v1(agent_names, alive_agents, obs, total_gold):
             players[i][obs.players[i]["posy"], obs.players[i]["posx"]] = 1
 
     board = np.stack(
-        [obstacle_random, obstacle_1, obstacle_5, obstacle_10, obstacle_40, obstacle_100, obstacle_value_min,
-         obstacle_value_max, gold, gold_amount])
+        [obstacle_random,
+         obstacle_1,
+         obstacle_5,
+         obstacle_10,
+         obstacle_20,
+         obstacle_40,
+         obstacle_100,
+         gold,
+         gold_amount])
     board = np.concatenate([players, board])
 
     featurized_obs = {}
