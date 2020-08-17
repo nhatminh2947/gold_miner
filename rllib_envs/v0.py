@@ -22,6 +22,7 @@ class RllibMinerEnv(MultiAgentEnv):
 
         self.is_render = config["render"]
 
+        self.prev_gold_map = None
         self.prev_raw_obs = None
         self.prev_score = [0, 0, 0, 0]
         self.episode_len = 0
@@ -122,7 +123,7 @@ class RllibMinerEnv(MultiAgentEnv):
                     win_loss[agent_name] = 0
 
                 if players[i]["lastAction"] == constants.Action.ACTION_CRAFT.value \
-                        and obs[agent_name]["conv_features"][11][players[i]["posy"], players[i]["posx"]] == 0:
+                        and self.prev_raw_obs.mapInfo.gold_amount(players[i]["posx"], players[i]["posy"]) == 0:
                     rewards[agent_name] -= 0.01
 
                 self.prev_score[i] = players[i]["score"]
