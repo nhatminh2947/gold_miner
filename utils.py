@@ -7,8 +7,8 @@ from color_text import ColorText
 def policy_mapping(agent_id):
     # agent_id pattern training/opponent_policy-id_agent-num
     # print("Calling to policy mapping {}".format(agent_id))
-
-    return agent_id
+    _, id, position = agent_id.split("_")
+    return f"policy_{id}"
 
 
 def featurize(agent_names, alive_agents, obs, total_gold):
