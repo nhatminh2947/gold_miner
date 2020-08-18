@@ -138,7 +138,7 @@ def featurize_v1(agent_names, alive_agents, obs, total_gold):
             score_of_agents.append(obs.players[i]["score"] / constants.MAX_EXTRACTABLE_GOLD)
         else:
             energy_of_agents.append(0)
-            score_of_agents.append(obs.players[i]["score"] / constants.MAX_EXTRACTABLE_GOLD)
+            score_of_agents.append(0)
 
     for i, agent_name in enumerate(agent_names):
         if agent_name in alive_agents:

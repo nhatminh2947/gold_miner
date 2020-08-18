@@ -91,7 +91,8 @@ class RllibMinerEnv(MultiAgentEnv):
         max_score = -1
         max_energy = -1
         for i, agent_name in enumerate(self.agent_names):
-            if agent_name in alive_agents:
+            if agent_name in alive_agents and players[i]["status"] in [constants.Status.STATUS_STOP_END_STEP.value,
+                                                                       constants.Status.STATUS_STOP_EMPTY_GOLD.value]:
                 if max_score < players[i]["score"]:
                     max_score = players[i]["score"]
                     max_energy = players[i]["energy"]
@@ -116,9 +117,10 @@ class RllibMinerEnv(MultiAgentEnv):
                             rewards[agent_name] = -1
                             win_loss[agent_name] = 0
                     else:
-                        rewards[agent_name] = -1 + players[i]["score"] / constants.MAX_EXTRACTABLE_GOLD
+                        rewards[agent_name] = -1
                         win_loss[agent_name] = 0
-                elif players[i]["status"] != constants.Status.STATUS_PLAYING.value:
+                elif players[i]["status"] in [constants.Status.STATUS_ELIMINATED_WENT_OUT_MAP.value,
+                                              constants.Status.STATUS_ELIMINATED_OUT_OF_ENERGY.value]:
                     rewards[agent_name] = -1.5
                     win_loss[agent_name] = 0
 
