@@ -18,17 +18,21 @@ class PopulationBasedTraining:
         self.copy_weight(trainer, src, dest)
 
     def copy_weight(self, trainer, src, dest):
-        P0key_P1val = {}
-        for (k, v), (k2, v2) in zip(trainer.get_policy(dest).get_weights().items(),
-                                    trainer.get_policy(src).get_weights().items()):
-            P0key_P1val[k] = v2
-
-        trainer.set_weights({dest: P0key_P1val,
-                             src: trainer.get_policy(src).get_weights()})
-
-        for (k, v), (k2, v2) in zip(trainer.get_policy(dest).get_weights().items(),
-                                    trainer.get_policy(src).get_weights().items()):
-            assert (v == v2).all()
+        trainer.get_policy(dest).set_state(trainer.get_policy(src).get_state())
+        # P0key_P1val = {}
+        # for (k, v), (k2, v2) in zip(trainer.get_policy(dest).get_state().items(),
+        #                             trainer.get_policy(src).get_state().items()):
+        #     P0key_P1val[k] = v2
+        #
+        # trainer.set_weights({dest: P0key_P1val,
+        #                      src: trainer.get_policy(src).get_weights()})
+        #
+        # trainer.set_weights({dest: P0key_P1val,
+        #                      src: trainer.get_policy(src).get_weights()})
+        #
+        # for (k, v), (k2, v2) in zip(trainer.get_policy(dest).get_weights().items(),
+        #                             trainer.get_policy(src).get_weights().items()):
+        #     assert (v == v2).all()
 
     def explore(self, trainer, policy_name):
         policy = trainer.get_policy(policy_name)
