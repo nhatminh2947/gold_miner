@@ -119,7 +119,7 @@ class RllibMinerEnv(MultiAgentEnv):
                         rewards[agent_name] = -1 + players[i]["score"] / constants.MAX_EXTRACTABLE_GOLD
                         win_loss[agent_name] = 0
                 elif players[i]["status"] != constants.Status.STATUS_PLAYING.value:
-                    rewards[agent_name] = -1.5
+                    rewards[agent_name] = -1
                     win_loss[agent_name] = 0
 
                 if players[i]["lastAction"] == constants.Action.ACTION_CRAFT.value \
