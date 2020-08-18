@@ -44,8 +44,8 @@ class RllibMinerEnv(MultiAgentEnv):
                 actions.append(Action.ACTION_FREE.value)
 
         if self.is_render:
+            print(f"Action: {[constants.Action(action).name for action in actions]}")
             utils.print_map(self.prev_raw_obs)
-            print(f"action: {[constants.Action(action).name for action in actions]}")
 
         alive_agents = list(action_dict.keys())
         raw_obs = self.env.step(','.join([str(action) for action in actions]))

@@ -86,8 +86,6 @@ def featurize_v1(agent_names, alive_agents, obs, total_gold):
     obstacle_20 = np.zeros([obs.mapInfo.height + 1, obs.mapInfo.width + 1], dtype=float)
     obstacle_40 = np.zeros([obs.mapInfo.height + 1, obs.mapInfo.width + 1], dtype=float)
     obstacle_100 = np.zeros([obs.mapInfo.height + 1, obs.mapInfo.width + 1], dtype=float)
-    obstacle_value_min = np.zeros([obs.mapInfo.height + 1, obs.mapInfo.width + 1], dtype=float)
-    obstacle_value_max = np.zeros([obs.mapInfo.height + 1, obs.mapInfo.width + 1], dtype=float)
 
     gold = np.zeros([obs.mapInfo.height + 1, obs.mapInfo.width + 1], dtype=float)
     gold_amount = np.zeros([obs.mapInfo.height + 1, obs.mapInfo.width + 1], dtype=float)
@@ -133,11 +131,14 @@ def featurize_v1(agent_names, alive_agents, obs, total_gold):
 
     featurized_obs = {}
     energy_of_agents = []
+    score_of_agents = []
     for i, agent_name in enumerate(agent_names):
         if agent_name in alive_agents:
             energy_of_agents.append(obs.players[i]["energy"] / constants.MAX_ENERGY)
+            score_of_agents.append(obs.players[i]["score"] / constants.MAX_EXTRACTABLE_GOLD)
         else:
             energy_of_agents.append(0)
+            score_of_agents.append(obs.players[i]["score"] / constants.MAX_EXTRACTABLE_GOLD)
 
     for i, agent_name in enumerate(agent_names):
         if agent_name in alive_agents:
@@ -146,12 +147,13 @@ def featurize_v1(agent_names, alive_agents, obs, total_gold):
 
             featurized_obs[agent_name] = {
                 "conv_features": np.copy(board),
-                "fc_features": np.concatenate([energy_of_agents, position])
+                "fc_features": np.concatenate([energy_of_agents, score_of_agents, position])
             }
 
         board[[0, i + 1]] = board[[i + 1, 0]]
         if i + 1 < len(energy_of_agents):
             energy_of_agents[0], energy_of_agents[i + 1] = energy_of_agents[i + 1], energy_of_agents[0]
+            score_of_agents[0], score_of_agents[i + 1] = score_of_agents[i + 1], score_of_agents[0]
 
     return featurized_obs
 

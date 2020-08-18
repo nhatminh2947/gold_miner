@@ -47,8 +47,8 @@ class ThirdModel(RecurrentNetwork, nn.Module):
             nn.ReLU(),
         )
 
-        # last layer + one hot last action + last reward + energies + position (x, y)
-        self.lstm = nn.LSTM(256 + 6 + 1 + 4 + 2, 128, batch_first=True)
+        # last layer + one hot last action + last reward + energies + score + position (x, y)
+        self.lstm = nn.LSTM(256 + 6 + 1 + 4 + 4 + 2, 128, batch_first=True)
 
         self.actor_layers = nn.Sequential(
             nn.Linear(128, 6)
