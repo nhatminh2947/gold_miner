@@ -51,7 +51,7 @@ class RllibMinerEnv(MultiAgentEnv):
         raw_obs = self.env.step(','.join([str(action) for action in actions]))
 
         obs = utils.featurize_v1(self.agent_names, alive_agents, raw_obs, self.total_gold)
-        rewards, win_loss = self._rewards(alive_agents, raw_obs.players, obs)
+        rewards, win_loss = self._rewards(alive_agents, raw_obs.players, raw_obs)
 
         dones = {}
         infos = {}
@@ -84,7 +84,7 @@ class RllibMinerEnv(MultiAgentEnv):
 
         return obs, rewards, dones, infos
 
-    def _rewards(self, alive_agents, players, obs):
+    def _rewards(self, alive_agents, players, raw_obs):
         rewards = {}
         win_loss = {}
 
@@ -119,12 +119,18 @@ class RllibMinerEnv(MultiAgentEnv):
                         rewards[agent_name] = -1 + players[i]["score"] / constants.MAX_EXTRACTABLE_GOLD
                         win_loss[agent_name] = 0
                 elif players[i]["status"] != constants.Status.STATUS_PLAYING.value:
-                    rewards[agent_name] = -1
+                    rewards[agent_name] = -1.5
                     win_loss[agent_name] = 0
 
                 if players[i]["lastAction"] == constants.Action.ACTION_CRAFT.value \
                         and self.prev_raw_obs.mapInfo.gold_amount(players[i]["posx"], players[i]["posy"]) == 0:
                     rewards[agent_name] -= 0.01
+                elif players[i]["lastAction"] in [constants.Action.ACTION_GO_UP.value,
+                                                  constants.Action.ACTION_GO_DOWN.value,
+                                                  constants.Action.ACTION_GO_LEFT.value,
+                                                  constants.Action.ACTION_GO_RIGHT.value] \
+                        and raw_obs.mapInfo.gold_amount(players[i]["posx"], players[i]["posy"]):
+                    rewards[agent_name] += 0.001
 
                 self.prev_score[i] = players[i]["score"]
 
