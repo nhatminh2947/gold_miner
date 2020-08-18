@@ -1,6 +1,6 @@
 import numpy as np
 from ray.rllib.utils.schedules import ConstantSchedule
-
+import copy
 
 class PopulationBasedTraining:
     def __init__(self, perturb_prob=0.2, perturb_val=0.2, burn_in=5e7, ready=5e7):
@@ -34,17 +34,25 @@ class PopulationBasedTraining:
         #                             trainer.get_policy(src).get_weights().items()):
         #     assert (v == v2).all()
 
-    def explore(self, trainer, policy_name):
-        policy = trainer.get_policy(policy_name)
+    def explore(self, trainer, src, dest):
+        policy_src = trainer.get_policy(src)
+        policy_dest = trainer.get_policy(dest)
+        # trainer.get_policy(dest).set_state(trainer.get_policy(src).get_state())
 
-        new_lr = self.explore_helper(policy.cur_lr, self.hyperparameters["lr"])
-        policy.lr_schedule = ConstantSchedule(new_lr, framework="torch")
+        src_state = copy.deepcopy(policy_src.get_state())
 
-        new_clip_param = self.explore_helper(policy.config["clip_param"], self.hyperparameters["clip_param"])
-        policy.config["clip_param"] = new_clip_param
+        new_lr = self.explore_helper(policy_src.cur_lr, self.hyperparameters["lr"])
+        policy_dest.lr_schedule = ConstantSchedule(new_lr, framework="torch")
+        policy_dest.config["cur_lr"] = new_lr
 
-        new_entropy_coeff = self.explore_helper(policy.config["entropy_coeff"], self.hyperparameters["entropy_coeff"])
-        policy.entropy_coeff_schedule = ConstantSchedule(new_entropy_coeff, framework="torch")
+        src_state["_optimizer_variables"][0]["param_groups"][0]["lr"] = new_lr
+        policy_dest.set_state(src_state)
+
+        new_clip_param = self.explore_helper(policy_src.config["clip_param"], self.hyperparameters["clip_param"])
+        policy_dest.config["clip_param"] = new_clip_param
+
+        new_entropy_coeff = self.explore_helper(policy_src.config["entropy_coeff"], self.hyperparameters["entropy_coeff"])
+        policy_dest.entropy_coeff_schedule = ConstantSchedule(new_entropy_coeff, framework="torch")
 
         return {"lr": new_lr, "clip_param": new_clip_param, "entropy_coeff": new_entropy_coeff}
 
@@ -73,7 +81,7 @@ class PopulationBasedTraining:
                 max_average_gold = result["custom_metrics"][f"policy_{i}/gold_mean"]
                 strongest_agent = i
 
-        self.exploit(trainer, f"policy_{strongest_agent}", f"policy_{weakest_agent}")
-        new_params = self.explore(trainer, f"policy_{weakest_agent}")
+        # self.exploit(trainer, f"policy_{strongest_agent}", f"policy_{weakest_agent}")
+        new_params = self.explore(trainer, f"policy_{strongest_agent}", f"policy_{weakest_agent}")
 
         return f"policy_{weakest_agent}", new_params
