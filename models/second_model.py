@@ -1,4 +1,3 @@
-import numpy as np
 from ray.rllib.models.modelv2 import ModelV2
 from ray.rllib.models.torch.torch_modelv2 import TorchModelV2
 from ray.rllib.utils import try_import_torch
@@ -8,7 +7,7 @@ torch, nn = try_import_torch()
 
 
 class SecondModel(TorchModelV2, nn.Module):
-    def __init__(self, obs_space, action_space, num_outputs, model_config, name, in_channels, input_size):
+    def __init__(self, obs_space, action_space, num_outputs, model_config, name, in_channels):
         nn.Module.__init__(self)
         super().__init__(obs_space, action_space, num_outputs, model_config, name)
 
@@ -38,18 +37,20 @@ class SecondModel(TorchModelV2, nn.Module):
                 stride=1),
             nn.ReLU(),
             nn.Flatten(),  # 1 * 13 * 256 = 3328
+            nn.Linear(3328, 1024),
+            nn.ReLU(),
+            nn.Linear(1024, 512),
+            nn.ReLU(),
+            nn.Linear(512, 256),
+            nn.ReLU(),
         )
 
         self.actor_layers = nn.Sequential(
-            nn.Linear(3331, 1024),
-            nn.ReLU(),
-            nn.Linear(1024, 6)
+            nn.Linear(256 + 2, 6)
         )
 
         self.critic_layers = nn.Sequential(
-            nn.Linear(3331, 1024),
-            nn.ReLU(),
-            nn.Linear(1024, 1)
+            nn.Linear(256 + 2, 1)
         )
 
         self._shared_layer_out = None

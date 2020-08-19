@@ -14,12 +14,7 @@ class RllibMinerEnv(MultiAgentEnv):
     def __init__(self, config):
         self.env = MinerEnv(config["host"], config["port"])
         self.env.start()
-        self.agent_names = [
-            "policy_0",
-            "policy_1",
-            "policy_2",
-            "policy_3",
-        ]
+        self.agent_names = None
 
         self.policy_names = [
             "policy_0",
@@ -58,7 +53,7 @@ class RllibMinerEnv(MultiAgentEnv):
         alive_agents = list(action_dict.keys())
         raw_obs = self.env.step(','.join([str(action) for action in actions]))
 
-        obs = utils.featurize_v1(self.agent_names, alive_agents, raw_obs, self.total_gold)
+        obs = utils.featurize_v2(self.agent_names, alive_agents, raw_obs, self.total_gold)
         rewards, win_loss = self._rewards_v1(alive_agents, raw_obs.players, raw_obs)
 
         dones = {}
@@ -169,7 +164,7 @@ class RllibMinerEnv(MultiAgentEnv):
                 if players[i]["status"] in [constants.Status.STATUS_STOP_END_STEP.value,
                                             constants.Status.STATUS_STOP_EMPTY_GOLD.value]:
                     if players[i]["score"] == 0:
-                        # rewards[agent_name] = -1
+                        rewards[agent_name] = -1
                         win_loss[agent_name] = 0
                     elif players[i]["score"] == max_score:
                         if players[i]["energy"] >= max_energy:
@@ -181,9 +176,6 @@ class RllibMinerEnv(MultiAgentEnv):
                     else:
                         # rewards[agent_name] = -1
                         win_loss[agent_name] = 0
-
-                    rewards[agent_name] = players[i]["score"] / constants.MAX_EXTRACTABLE_GOLD if players[i]["score"] \
-                        else -1
 
                 elif players[i]["status"] in [constants.Status.STATUS_ELIMINATED_WENT_OUT_MAP.value,
                                               constants.Status.STATUS_ELIMINATED_OUT_OF_ENERGY.value]:
@@ -225,4 +217,4 @@ class RllibMinerEnv(MultiAgentEnv):
             self.stat.append({metric.name: 0 for metric in Metrics})
             self.stat[i][Metrics.ENERGY.name] = 50
 
-        return utils.featurize_v1(self.agent_names, self.agent_names, raw_obs, self.total_gold)
+        return utils.featurize_v2(self.agent_names, self.agent_names, raw_obs, self.total_gold)

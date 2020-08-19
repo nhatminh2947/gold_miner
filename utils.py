@@ -86,6 +86,8 @@ def featurize_v1(agent_names, alive_agents, obs, total_gold):
     obstacle_20 = np.zeros([obs.mapInfo.height + 1, obs.mapInfo.width + 1], dtype=float)
     obstacle_40 = np.zeros([obs.mapInfo.height + 1, obs.mapInfo.width + 1], dtype=float)
     obstacle_100 = np.zeros([obs.mapInfo.height + 1, obs.mapInfo.width + 1], dtype=float)
+    obstacle_value_min = np.zeros([obs.mapInfo.height + 1, obs.mapInfo.width + 1], dtype=float)
+    obstacle_value_max = np.zeros([obs.mapInfo.height + 1, obs.mapInfo.width + 1], dtype=float)
 
     gold = np.zeros([obs.mapInfo.height + 1, obs.mapInfo.width + 1], dtype=float)
     gold_amount = np.zeros([obs.mapInfo.height + 1, obs.mapInfo.width + 1], dtype=float)
@@ -93,25 +95,28 @@ def featurize_v1(agent_names, alive_agents, obs, total_gold):
     for i in range(obs.mapInfo.height + 1):
         for j in range(obs.mapInfo.width + 1):
             type, value = obs.mapInfo.get_obstacle_type(j, i)
-            if value == 0:
+            if value == 0:  # Forest
                 obstacle_random[i, j] = 1
-            if value == -1:
+            if value == -1:  # Land
                 obstacle_1[i, j] = 1
-            if value == -5:
+            if value == -5:  # Swamp 1
                 obstacle_5[i, j] = 1
-            if value == -10:
+            if value == -10:  # Trap
                 obstacle_10[i, j] = 1
-            if value == -20:
+            if value == -20:  # Swamp 2
                 obstacle_20[i, j] = 1
-            if value == -40:
+            if value == -40:  # Swamp 3
                 obstacle_40[i, j] = 1
-            if value == -100:
+            if value == -100:  # Swamp 4
                 obstacle_100[i, j] = 1
-            if value is None:
+            if value is None:  # Gold spot
                 gold[i, j] = 1
                 value = -4
 
-            gold_amount[i, j] = obs.mapInfo.gold_amount(j, i) / constants.MAX_EXTRACTABLE_GOLD
+            obstacle_value_min[i, j] = (-value if value != 0 else 5) / constants.MAX_ENERGY
+            obstacle_value_max[i, j] = (-value if value != 0 else 20) / constants.MAX_ENERGY
+
+            gold_amount[i, j] = obs.mapInfo.gold_amount(j, i) / total_gold
 
     for i in range(4):
         if obs.players[i]["status"] == constants.Status.STATUS_PLAYING.value:
@@ -125,9 +130,11 @@ def featurize_v1(agent_names, alive_agents, obs, total_gold):
          obstacle_20,
          obstacle_40,
          obstacle_100,
+         obstacle_value_min,
+         obstacle_value_max,
          gold,
          gold_amount])
-    board = np.concatenate([players, board])
+    # board = np.concatenate([players, board])
 
     featurized_obs = {}
     energy_of_agents = []
@@ -146,14 +153,100 @@ def featurize_v1(agent_names, alive_agents, obs, total_gold):
                                          obs.players[i]["posx"] / 20 * 2 - 1]), -1, 1)
 
             featurized_obs[agent_name] = {
-                "conv_features": np.copy(board),
-                "fc_features": np.concatenate([energy_of_agents, score_of_agents, position])
+                "conv_features": np.concatenate([players, np.copy(board)]),
+                "fc_features": np.concatenate([
+                    # energy_of_agents,
+                    # score_of_agents,
+                    position])
             }
 
         board[[0, i + 1]] = board[[i + 1, 0]]
         if i + 1 < len(energy_of_agents):
             energy_of_agents[0], energy_of_agents[i + 1] = energy_of_agents[i + 1], energy_of_agents[0]
             score_of_agents[0], score_of_agents[i + 1] = score_of_agents[i + 1], score_of_agents[0]
+
+    return featurized_obs
+
+
+def featurize_v2(agent_names, alive_agents, obs, total_gold):
+    players = np.zeros((4, obs.mapInfo.height + 1, obs.mapInfo.width + 1), dtype=float)
+    obstacle_1 = np.zeros([obs.mapInfo.height + 1, obs.mapInfo.width + 1], dtype=float)
+    obstacle_random = np.zeros([obs.mapInfo.height + 1, obs.mapInfo.width + 1], dtype=float)
+    obstacle_5 = np.zeros([obs.mapInfo.height + 1, obs.mapInfo.width + 1], dtype=float)
+    obstacle_10 = np.zeros([obs.mapInfo.height + 1, obs.mapInfo.width + 1], dtype=float)
+    obstacle_20 = np.zeros([obs.mapInfo.height + 1, obs.mapInfo.width + 1], dtype=float)
+    obstacle_40 = np.zeros([obs.mapInfo.height + 1, obs.mapInfo.width + 1], dtype=float)
+    obstacle_100 = np.zeros([obs.mapInfo.height + 1, obs.mapInfo.width + 1], dtype=float)
+    obstacle_value_min = np.zeros([obs.mapInfo.height + 1, obs.mapInfo.width + 1], dtype=float)
+    obstacle_value_max = np.zeros([obs.mapInfo.height + 1, obs.mapInfo.width + 1], dtype=float)
+
+    gold = np.zeros([obs.mapInfo.height + 1, obs.mapInfo.width + 1], dtype=float)
+    gold_amount = np.zeros([obs.mapInfo.height + 1, obs.mapInfo.width + 1], dtype=float)
+
+    for i in range(obs.mapInfo.height + 1):
+        for j in range(obs.mapInfo.width + 1):
+            type, value = obs.mapInfo.get_obstacle_type(j, i)
+            if value == 0:  # Forest
+                obstacle_random[i, j] = 1
+            if value == -1:  # Land
+                obstacle_1[i, j] = 1
+            if value == -5:  # Swamp 1
+                obstacle_5[i, j] = 1
+            if value == -10:  # Trap
+                obstacle_10[i, j] = 1
+            if value == -20:  # Swamp 2
+                obstacle_20[i, j] = 1
+            if value == -40:  # Swamp 3
+                obstacle_40[i, j] = 1
+            if value == -100:  # Swamp 4
+                obstacle_100[i, j] = 1
+            if value is None:  # Gold spot
+                gold[i, j] = 1
+                value = -4
+
+            obstacle_value_min[i, j] = (-value if value != 0 else 5) / constants.MAX_ENERGY
+            obstacle_value_max[i, j] = (-value if value != 0 else 20) / constants.MAX_ENERGY
+
+            gold_amount[i, j] = obs.mapInfo.gold_amount(j, i) / total_gold
+
+    for i in range(4):
+        if obs.players[i]["status"] == constants.Status.STATUS_PLAYING.value:
+            players[i][obs.players[i]["posy"], obs.players[i]["posx"]] = 1
+
+    board = np.stack([
+        obstacle_random,
+        obstacle_1,
+        obstacle_5,
+        obstacle_10,
+        obstacle_20,
+        obstacle_40,
+        obstacle_100,
+        obstacle_value_min,
+        obstacle_value_max,
+        gold,
+        gold_amount
+    ])
+    # board = np.concatenate([players, board])
+
+    featurized_obs = {}
+
+    for i, agent_name in enumerate(agent_names):
+        if agent_name in alive_agents:
+            position = np.clip(np.array([obs.players[i]["posy"] / 8 * 2 - 1,
+                                         obs.players[i]["posx"] / 20 * 2 - 1]), -1, 1)
+
+            featurized_obs[agent_name] = {
+                "conv_features": np.concatenate([
+                    players,
+                    np.copy(board),
+                    np.full((1, obs.mapInfo.height + 1, obs.mapInfo.width + 1),
+                            fill_value=obs.players[i]["energy"] / constants.MAX_ENERGY)
+                ]),
+                "fc_features": position
+            }
+
+        if i + 1 < 4:
+            players[[0, i + 1]] = players[[i + 1, 0]]
 
     return featurized_obs
 
