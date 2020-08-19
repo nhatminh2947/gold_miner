@@ -1,5 +1,6 @@
 import copy
 
+import numpy as np
 from ray.rllib.env.multi_agent_env import MultiAgentEnv
 
 import constants
@@ -7,7 +8,7 @@ import utils
 from MinerTraining import Metrics
 from MinerTraining import MinerEnv
 from constants import Action
-import numpy as np
+
 
 class RllibMinerEnv(MultiAgentEnv):
     def __init__(self, config):
@@ -180,6 +181,10 @@ class RllibMinerEnv(MultiAgentEnv):
                     else:
                         # rewards[agent_name] = -1
                         win_loss[agent_name] = 0
+
+                    rewards[agent_name] = players[i]["score"] / constants.MAX_EXTRACTABLE_GOLD if players[i]["score"] \
+                        else -1
+
                 elif players[i]["status"] in [constants.Status.STATUS_ELIMINATED_WENT_OUT_MAP.value,
                                               constants.Status.STATUS_ELIMINATED_OUT_OF_ENERGY.value]:
                     rewards[agent_name] = -1
