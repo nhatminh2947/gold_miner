@@ -7,7 +7,6 @@ import utils
 from MinerTraining import Metrics
 from MinerTraining import MinerEnv
 from constants import Action
-import numpy as np
 
 
 class RllibMinerEnv(MultiAgentEnv):
@@ -15,13 +14,6 @@ class RllibMinerEnv(MultiAgentEnv):
         self.env = MinerEnv(config["host"], config["port"])
         self.env.start()
         self.agent_names = [
-            "policy_0",
-            "policy_1",
-            "policy_2",
-            "policy_3",
-        ]
-
-        self.policy_names = [
             "policy_0",
             "policy_1",
             "policy_2",
@@ -59,7 +51,7 @@ class RllibMinerEnv(MultiAgentEnv):
         raw_obs = self.env.step(','.join([str(action) for action in actions]))
 
         obs = utils.featurize_v1(self.agent_names, alive_agents, raw_obs, self.total_gold)
-        rewards, win_loss = self._rewards(alive_agents, raw_obs.players, raw_obs)
+        rewards, win_loss = self._rewards_v1(alive_agents, raw_obs.players, raw_obs)
 
         dones = {}
         infos = {}
@@ -146,8 +138,59 @@ class RllibMinerEnv(MultiAgentEnv):
 
         return rewards, win_loss
 
-    # def _exporation_reward(self, alive_agents, players, obs):
-    #
+    def _rewards_v1(self, alive_agents, players, raw_obs):
+        rewards = {}
+        win_loss = {}
+
+        max_score = -1
+        max_energy = -1
+        for i, agent_name in enumerate(self.agent_names):
+            if agent_name in alive_agents and players[i]["status"] in [constants.Status.STATUS_STOP_END_STEP.value,
+                                                                       constants.Status.STATUS_STOP_EMPTY_GOLD.value]:
+                if max_score < players[i]["score"]:
+                    max_score = players[i]["score"]
+                    max_energy = players[i]["energy"]
+                elif max_score == players[i]["score"] and max_energy < players[i]["energy"]:
+                    max_energy = players[i]["energy"]
+
+        for i, agent_name in enumerate(self.agent_names):
+            if agent_name in alive_agents:
+                rewards[agent_name] = (players[i]["score"] - self.prev_score[i]) * 1.0 \
+                                      / constants.MAX_EXTRACTABLE_GOLD
+
+                if players[i]["status"] in [constants.Status.STATUS_STOP_END_STEP.value,
+                                            constants.Status.STATUS_STOP_EMPTY_GOLD.value]:
+                    if players[i]["score"] == 0:
+                        # rewards[agent_name] = -1
+                        win_loss[agent_name] = 0
+                    elif players[i]["score"] == max_score:
+                        if players[i]["energy"] >= max_energy:
+                            # rewards[agent_name] = 1
+                            win_loss[agent_name] = 1
+                        else:
+                            # rewards[agent_name] = -1
+                            win_loss[agent_name] = 0
+                    else:
+                        # rewards[agent_name] = -1
+                        win_loss[agent_name] = 0
+                elif players[i]["status"] in [constants.Status.STATUS_ELIMINATED_WENT_OUT_MAP.value,
+                                              constants.Status.STATUS_ELIMINATED_OUT_OF_ENERGY.value]:
+                    rewards[agent_name] = -1
+                    win_loss[agent_name] = 0
+
+                if players[i]["lastAction"] == constants.Action.ACTION_CRAFT.value \
+                        and self.prev_raw_obs.mapInfo.gold_amount(players[i]["posx"], players[i]["posy"]) == 0:
+                    rewards[agent_name] -= 0.01
+                elif players[i]["lastAction"] in [constants.Action.ACTION_GO_UP.value,
+                                                  constants.Action.ACTION_GO_DOWN.value,
+                                                  constants.Action.ACTION_GO_LEFT.value,
+                                                  constants.Action.ACTION_GO_RIGHT.value] \
+                        and raw_obs.mapInfo.gold_amount(players[i]["posx"], players[i]["posy"]):
+                    rewards[agent_name] += 0.001
+
+                self.prev_score[i] = players[i]["score"]
+
+        return rewards, win_loss
 
     def reset(self):
         raw_obs = self.env.reset()
@@ -160,10 +203,6 @@ class RllibMinerEnv(MultiAgentEnv):
         self.count_done = 0
         self.prev_raw_obs = copy.deepcopy(raw_obs)
         self.episode_len = 0
-
-        self.agent_names = list(np.random.permutation(self.policy_names))
-        for i in range(4):
-            self.agent_names[i] = f"{self.agent_names[i]}_{i}"
 
         self.stat = []
         for i in range(4):

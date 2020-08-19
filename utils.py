@@ -111,7 +111,7 @@ def featurize_v1(agent_names, alive_agents, obs, total_gold):
                 gold[i, j] = 1
                 value = -4
 
-            gold_amount[i, j] = obs.mapInfo.gold_amount(j, i) / total_gold
+            gold_amount[i, j] = obs.mapInfo.gold_amount(j, i) / constants.MAX_EXTRACTABLE_GOLD
 
     for i in range(4):
         if obs.players[i]["status"] == constants.Status.STATUS_PLAYING.value:

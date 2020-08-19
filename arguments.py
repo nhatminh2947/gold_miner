@@ -43,5 +43,6 @@ def get_parser():
     parser.add_argument("--custom_model", type=str)
     parser.add_argument("--ready", type=float, default=5e7)
     parser.add_argument("--max_seq_len", type=int, default=100)
+    parser.add_argument("--explore", action="store_true")
 
     return parser

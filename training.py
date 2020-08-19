@@ -91,7 +91,8 @@ def initialize():
             "lr": np.random.uniform(1e-5, 1e-3),
             "clip_param": np.random.uniform(0.1, 0.3),
             "entropy_coeff": np.random.uniform(1e-3, 1e-1),
-            "framework": "torch"
+            "framework": "torch",
+            "explore": params["explore"]
         }
         return PPOTorchPolicy, constants.OBS_SPACE, constants.ACT_SPACE, config
 
