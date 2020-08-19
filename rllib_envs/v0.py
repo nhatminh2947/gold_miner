@@ -7,13 +7,20 @@ import utils
 from MinerTraining import Metrics
 from MinerTraining import MinerEnv
 from constants import Action
-
+import numpy as np
 
 class RllibMinerEnv(MultiAgentEnv):
     def __init__(self, config):
         self.env = MinerEnv(config["host"], config["port"])
         self.env.start()
         self.agent_names = [
+            "policy_0",
+            "policy_1",
+            "policy_2",
+            "policy_3",
+        ]
+
+        self.policy_names = [
             "policy_0",
             "policy_1",
             "policy_2",
@@ -203,6 +210,10 @@ class RllibMinerEnv(MultiAgentEnv):
         self.count_done = 0
         self.prev_raw_obs = copy.deepcopy(raw_obs)
         self.episode_len = 0
+
+        self.agent_names = list(np.random.permutation(self.policy_names))
+        for i in range(4):
+            self.agent_names[i] = f"{self.agent_names[i]}_{i}"
 
         self.stat = []
         for i in range(4):
