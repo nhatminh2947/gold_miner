@@ -88,9 +88,9 @@ def initialize():
                 },
                 "no_final_linear": True,
             },
-            "lr": np.random.uniform(1e-5, 1e-3),
+            "lr": np.random.uniform(1e-4, 1e-3),
             "clip_param": np.random.uniform(0.1, 0.3),
-            "entropy_coeff": np.random.uniform(1e-3, 1e-1),
+            # "entropy_coeff": np.random.uniform(1e-3, 1e-1),
             "framework": "torch",
             "explore": params["explore"]
         }
