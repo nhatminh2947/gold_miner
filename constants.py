@@ -9,7 +9,7 @@ from gym.spaces import Dict, Box, Discrete
 # Map 4 7500 - 19 gold spots
 # Map 5 7100 - 21 gold spots
 MAX_LEN = 100
-NUM_FEATURES = 13
+NUM_FEATURES = 16
 MAX_EXTRACTABLE_GOLD = 5000
 N_COLS = 21
 N_ROWS = 9
@@ -18,7 +18,7 @@ BASE_ENERGY = 5
 
 OBS_SPACE = Dict({
     "conv_features": Box(low=0, high=2, shape=(NUM_FEATURES, N_ROWS, N_COLS)),
-    "fc_features": Box(low=-1, high=1, shape=(4 + 2 + 4,))
+    "fc_features": Box(low=-1, high=1, shape=(2,))
 })
 
 ACT_SPACE = Discrete(6)

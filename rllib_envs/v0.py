@@ -185,6 +185,7 @@ class RllibMinerEnv(MultiAgentEnv):
                 if players[i]["lastAction"] == constants.Action.ACTION_CRAFT.value \
                         and self.prev_raw_obs.mapInfo.gold_amount(players[i]["posx"], players[i]["posy"]) == 0:
                     rewards[agent_name] -= 0.01
+                    self.stat[i][Metrics.INVALID_CRAFT.name] += 1
                 elif players[i]["lastAction"] in [constants.Action.ACTION_GO_UP.value,
                                                   constants.Action.ACTION_GO_DOWN.value,
                                                   constants.Action.ACTION_GO_LEFT.value,
