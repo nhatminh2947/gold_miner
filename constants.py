@@ -17,7 +17,7 @@ MAX_ENERGY = 100
 BASE_ENERGY = 5
 
 OBS_SPACE = Dict({
-    "conv_features": Box(low=0, high=2, shape=(NUM_FEATURES, N_ROWS, N_COLS)),
+    "conv_features": Box(low=-1, high=2, shape=(NUM_FEATURES, N_ROWS, N_COLS)),
     "fc_features": Box(low=-1, high=1, shape=(2,))
 })
 
