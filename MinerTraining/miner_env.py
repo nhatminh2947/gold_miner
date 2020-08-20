@@ -28,10 +28,12 @@ class MinerEnv:
     def reset(self):  # start new game
         try:
             mapID = np.random.randint(1, 6)
+            version = np.random.randint(0, 4)
             # mapID = 0
             posID_x = np.random.randint(constants.N_COLS)
             posID_y = np.random.randint(constants.N_ROWS)
-            request = ("map" + str(mapID) + "," + str(posID_x) + "," + str(posID_y) + ",50,100")
+            # request = ("map" + str(mapID) + "," + str(posID_x) + "," + str(posID_y) + ",50,100")
+            request = f"map{mapID}_{version},{posID_x},{posID_y},50,100"
             # Send the request to the game environment (GAME_SOCKET_DUMMY.py)
             print(request)
             self.send_map_info(request)

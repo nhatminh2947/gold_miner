@@ -345,5 +345,21 @@ def generate_map():
     return map
 
 
+def flip_map():
+    import json
+    path = "/home/lucius/working/projects/gold_miner/resources/Maps"
+    for i in range(1, 6):
+        map_id = f"{path}/map{i}"
+
+        with open(map_id, 'r') as fr:
+            map = np.asarray(json.load(fr))
+
+            for j, axis in enumerate([0, 1, 0, 1]):
+                map = np.flip(map, axis=axis)
+
+                with open(f"./resources/Maps/map{i}_{j}", "w") as fw:
+                    json.dump(map.tolist(), fw)
+
+
 if __name__ == '__main__':
-    generate_map()
+    flip_map()
