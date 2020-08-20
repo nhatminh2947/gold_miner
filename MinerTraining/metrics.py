@@ -11,3 +11,4 @@ class Metrics(Enum):
     ENERGY = 6
     INVALID_CRAFT = 7
     INVALID_FREE = 8
+    FINDING_GOLD = 9

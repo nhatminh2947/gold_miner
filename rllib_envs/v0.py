@@ -194,8 +194,14 @@ class RllibMinerEnv(MultiAgentEnv):
                     rewards[agent_name] += 0.001
                 elif players[i]["lastAction"] == constants.Action.ACTION_FREE.value \
                         and self.prev_raw_obs.players[i]["energy"] > 40:
-                    rewards[agent_name] -= 0.02
+                    # rewards[agent_name] -= 0.02
                     self.stat[i][Metrics.INVALID_FREE.name] += 1
+
+                if raw_obs.mapInfo.gold_amount(players[i]["posx"], players[i]["posy"]) == 0:
+                    if not (players[i]["lastAction"] and self.prev_raw_obs.mapInfo.gold_amount(players[i]["posx"],
+                                                                                               players[i]["posy"])):
+                        rewards[agent_name] -= 0.001
+                        self.stat[i][Metrics.FINDING_GOLD.name] += 1
 
                 self.prev_score[i] = players[i]["score"]
 
