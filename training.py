@@ -15,7 +15,7 @@ import arguments
 import constants
 from MinerTraining import Metrics
 from MinerTraining import PopulationBasedTraining
-from models import TorchRNNModel, SecondModel, ThirdModel
+from models import TorchRNNModel, SecondModel, ThirdModel,FourthModel
 from rllib_envs import v0
 from utils import policy_mapping
 
@@ -62,6 +62,7 @@ def register(env_config):
     ModelCatalog.register_custom_model("1st_model", TorchRNNModel)
     ModelCatalog.register_custom_model("2nd_model", SecondModel)
     ModelCatalog.register_custom_model("3rd_model", ThirdModel)
+    ModelCatalog.register_custom_model("4th_model", FourthModel)
 
     tune.register_env("MinerEnv-v0", lambda x: v0.RllibMinerEnv(env_config))
 
@@ -90,7 +91,7 @@ def initialize():
             },
             "lr": np.random.uniform(1e-4, 1e-3),
             "clip_param": np.random.uniform(0.1, 0.3),
-            # "entropy_coeff": np.random.uniform(1e-3, 1e-1),
+            "entropy_coeff": np.random.uniform(1e-3, 1e-1),
             "framework": "torch",
             "explore": params["explore"]
         }

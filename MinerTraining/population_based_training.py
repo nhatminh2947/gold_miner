@@ -13,9 +13,9 @@ class PopulationBasedTraining:
         self.last_update = 0
 
         self.hyper_params = {
-            "lr": (1e-5, 1e-3),
+            "lr": (1e-4, 1e-3),
             "clip_param": (0.1, 0.3),
-            # "entropy_coeff": (1e-3, 1e-1)
+            "entropy_coeff": (1e-3, 1e-1)
         }
 
     def exploit(self, trainer, src, dest):
@@ -55,13 +55,13 @@ class PopulationBasedTraining:
         new_clip_param = self.explore_helper(policy_src.config["clip_param"], self.hyper_params["clip_param"])
         policy_dest.config["clip_param"] = new_clip_param
 
-        # new_entropy_coeff = self.explore_helper(policy_src.config["entropy_coeff"], self.hyper_params["entropy_coeff"])
-        # policy_dest.entropy_coeff_schedule = ConstantSchedule(new_entropy_coeff, framework="torch")
+        new_entropy_coeff = self.explore_helper(policy_src.config["entropy_coeff"], self.hyper_params["entropy_coeff"])
+        policy_dest.entropy_coeff_schedule = ConstantSchedule(new_entropy_coeff, framework="torch")
 
         return {
             "lr": new_lr,
             "clip_param": new_clip_param,
-            # "entropy_coeff": new_entropy_coeff
+            "entropy_coeff": new_entropy_coeff
         }
 
     def explore_helper(self, old_value, range):
