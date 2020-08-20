@@ -10,3 +10,4 @@ class Metrics(Enum):
     CRAFT = 5
     ENERGY = 6
     INVALID_CRAFT = 7
+    INVALID_FREE = 8
