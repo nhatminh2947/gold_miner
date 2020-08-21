@@ -19,7 +19,7 @@ class FourthModel(TorchModelV2, nn.Module):
                 padding=1,
                 stride=1
             ),
-            nn.ReLU(),
+            nn.ELU(),
             nn.Conv2d(
                 in_channels=64,
                 out_channels=64,
@@ -27,7 +27,7 @@ class FourthModel(TorchModelV2, nn.Module):
                 padding=1,
                 stride=1
             ),
-            nn.ReLU(),
+            nn.ELU(),
             nn.Conv2d(
                 in_channels=64,
                 out_channels=64,
@@ -35,7 +35,7 @@ class FourthModel(TorchModelV2, nn.Module):
                 padding=1,
                 stride=1
             ),
-            nn.ReLU(),
+            nn.ELU(),
             nn.Conv2d(
                 in_channels=64,
                 out_channels=64,
@@ -43,42 +43,42 @@ class FourthModel(TorchModelV2, nn.Module):
                 padding=1,
                 stride=1
             ),
-            nn.ReLU(),
+            nn.ELU(),
             nn.Conv2d(
                 in_channels=64,
                 out_channels=64,
                 kernel_size=3,
                 stride=1
             ),
-            nn.ReLU(),
+            nn.ELU(),
             nn.Conv2d(
                 in_channels=64,
                 out_channels=64,
                 kernel_size=3,
                 stride=1
             ),
-            nn.ReLU(),
+            nn.ELU(),
             nn.Conv2d(
                 in_channels=64,
                 out_channels=64,
                 kernel_size=3,
                 stride=1
             ),
-            nn.ReLU(),
+            nn.ELU(),
             nn.Conv2d(
                 in_channels=64,
                 out_channels=64,
                 kernel_size=3,
                 stride=1
             ),
-            nn.ReLU(),
+            nn.ELU(),
             nn.Flatten(),  # 1 * 13 * 64 = 832
             nn.Linear(832, 512),
-            nn.ReLU(),
+            nn.ELU(),
             nn.Linear(512, 256),
-            nn.ReLU(),
+            nn.ELU(),
             nn.Linear(256, 128),
-            nn.ReLU(),
+            nn.ELU(),
         )
 
         self.actor_layers = nn.Sequential(
