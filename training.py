@@ -47,15 +47,15 @@ class MinerCallbacks(DefaultCallbacks):
                            constants.Status.STATUS_STOP_EMPTY_GOLD]:
                 episode.custom_metrics[f"{policy}/{status.name}"] = int(status.name == info["status"].name)
 
-    def on_train_result(self, trainer, result: dict, **kwargs):
-        if result["custom_metrics"]:
-            if result["timesteps_total"] - self.pbt.last_update >= self.pbt.ready:
-                self.pbt.run(trainer, result)
-                self.pbt.last_update = result["timesteps_total"]
-
-            for i in range(4):
-                result["custom_metrics"][f"policy_{i}/clip_param"] \
-                    = trainer.get_policy(f"policy_{i}").config["clip_param"]
+    # def on_train_result(self, trainer, result: dict, **kwargs):
+    #     if result["custom_metrics"]:
+    #         if result["timesteps_total"] - self.pbt.last_update >= self.pbt.ready:
+    #             self.pbt.run(trainer, result)
+    #             self.pbt.last_update = result["timesteps_total"]
+    #
+    #         for i in range(4):
+    #             result["custom_metrics"][f"policy_{i}/clip_param"] \
+    #                 = trainer.get_policy(f"policy_{i}").config["clip_param"]
 
 
 def register(env_config):

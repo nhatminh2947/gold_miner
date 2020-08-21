@@ -158,8 +158,7 @@ class RllibMinerEnv(MultiAgentEnv):
 
         for i, agent_name in enumerate(self.agent_names):
             if agent_name in alive_agents:
-                rewards[agent_name] = (players[i]["score"] - self.prev_score[i]) * 1.0 \
-                                      / constants.MAX_EXTRACTABLE_GOLD
+                rewards[agent_name] = (players[i]["score"] - self.prev_score[i]) / 50 * 0.02
 
                 if players[i]["status"] in [constants.Status.STATUS_STOP_END_STEP.value,
                                             constants.Status.STATUS_STOP_EMPTY_GOLD.value]:
@@ -184,7 +183,7 @@ class RllibMinerEnv(MultiAgentEnv):
 
                 if players[i]["lastAction"] == constants.Action.ACTION_CRAFT.value \
                         and self.prev_raw_obs.mapInfo.gold_amount(players[i]["posx"], players[i]["posy"]) == 0:
-                    rewards[agent_name] -= 0.02
+                    rewards[agent_name] -= 0.05
                     self.stat[i][Metrics.INVALID_CRAFT.name] += 1
                 elif players[i]["lastAction"] in [constants.Action.ACTION_GO_UP.value,
                                                   constants.Action.ACTION_GO_DOWN.value,
@@ -200,7 +199,7 @@ class RllibMinerEnv(MultiAgentEnv):
                 if raw_obs.mapInfo.gold_amount(players[i]["posx"], players[i]["posy"]) == 0:
                     if not (players[i]["lastAction"] and self.prev_raw_obs.mapInfo.gold_amount(players[i]["posx"],
                                                                                                players[i]["posy"])):
-                        rewards[agent_name] -= 0.001
+                        # rewards[agent_name] -= 0.001
                         self.stat[i][Metrics.FINDING_GOLD.name] += 1
 
                 self.prev_score[i] = players[i]["score"]

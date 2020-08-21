@@ -207,7 +207,7 @@ def featurize_v2(agent_names, alive_agents, obs, total_gold):
             obstacle_value_min[i, j] = (-value if value != 0 else 5) / constants.MAX_ENERGY
             obstacle_value_max[i, j] = (-value if value != 0 else 20) / constants.MAX_ENERGY
 
-            gold_amount[i, j] = obs.mapInfo.gold_amount(j, i) / total_gold
+            gold_amount[i, j] = obs.mapInfo.gold_amount(j, i) / 3000
 
     for i in range(4):
         if obs.players[i]["status"] == constants.Status.STATUS_PLAYING.value:
@@ -240,7 +240,7 @@ def featurize_v2(agent_names, alive_agents, obs, total_gold):
                     players,
                     np.copy(board),
                     np.full((1, obs.mapInfo.height + 1, obs.mapInfo.width + 1),
-                            fill_value=obs.players[i]["energy"] / constants.MAX_ENERGY)
+                            fill_value=obs.players[i]["energy"] / (constants.MAX_ENERGY / 2))
                 ]),
                 "fc_features": position
             }
@@ -318,6 +318,13 @@ def print_map(obs):
 
 
 def generate_map():
+    gold_q = []
+
+    gold_next_to_prob = 0.1
+    obstacle_prob = [0.75]
+
+    dx = [-1, 0, 0, 1]
+    dy = [0, -1, 1, 0]
     n_gold_spots = np.random.randint(15, 25)
     n_digging_times = np.random.randint(100, 200) - n_gold_spots
 
@@ -330,15 +337,36 @@ def generate_map():
         while map[i, j] != 0:
             i = np.random.randint(9)
             j = np.random.randint(21)
-
+        gold_q.append((i, j))
         n_digging_this_spot = 1 + (np.ceil(np.random.normal(10, 5)) if n_gold_spots != 1 else n_digging_times)
 
         map[i, j] = n_digging_this_spot * 50
         n_digging_times = max(0, n_digging_times - n_digging_this_spot)
         n_gold_spots -= 1
 
+        for ix, iy in zip(dx, dy):
+            ii = i + ix
+            jj = j + iy
+
+            if 0 <= ii < 9 and 0 <= jj < 21 and np.random.random() < gold_next_to_prob:
+                n_digging_this_spot = 1 + (np.ceil(np.random.normal(10, 5)) if n_gold_spots != 1 else n_digging_times)
+                map[ii, jj] = n_digging_this_spot * 50
+                n_digging_times = max(0, n_digging_times - n_digging_this_spot)
+                n_gold_spots -= 1
+                gold_q.append((ii, jj))
+
+        obstacle_type = np.random.randint(1, 4)
+        while len(gold_q) != 0:
+            x, y = gold_q.pop(0)
+            for ix, iy in zip(dx, dy):
+                xx = x + ix
+                yy = y + iy
+
+                if map[xx, yy] == 0 and np.random.random() < 0.75:
+                    map[xx, yy] = -obstacle_type
+
     print(map)
-    with open("resources/Maps", "w") as f:
+    with open("resources/Maps/map0_0", "w") as f:
         import json
         json.dump(map.tolist(), f)
 
@@ -362,4 +390,4 @@ def flip_map():
 
 
 if __name__ == '__main__':
-    flip_map()
+    generate_map()

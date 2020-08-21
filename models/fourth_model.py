@@ -14,38 +14,79 @@ class FourthModel(TorchModelV2, nn.Module):
         self.shared_layers = nn.Sequential(
             nn.Conv2d(
                 in_channels=in_channels,
-                out_channels=32,
-                kernel_size=5,
-                padding=2,
-                stride=1),
-            nn.ReLU(),
-            nn.Conv2d(
-                in_channels=32,
                 out_channels=64,
-                kernel_size=5,
-                stride=1),
+                kernel_size=3,
+                padding=1,
+                stride=1
+            ),
             nn.ReLU(),
             nn.Conv2d(
                 in_channels=64,
-                out_channels=128,
-                kernel_size=5,
-                stride=1),
+                out_channels=64,
+                kernel_size=3,
+                padding=1,
+                stride=1
+            ),
             nn.ReLU(),
-            nn.Flatten(),  # 1 * 13 * 128 = 1664
-            nn.Linear(1664, 1024),
+            nn.Conv2d(
+                in_channels=64,
+                out_channels=64,
+                kernel_size=3,
+                padding=1,
+                stride=1
+            ),
             nn.ReLU(),
-            nn.Linear(1024, 512),
+            nn.Conv2d(
+                in_channels=64,
+                out_channels=64,
+                kernel_size=3,
+                padding=1,
+                stride=1
+            ),
+            nn.ReLU(),
+            nn.Conv2d(
+                in_channels=64,
+                out_channels=64,
+                kernel_size=3,
+                stride=1
+            ),
+            nn.ReLU(),
+            nn.Conv2d(
+                in_channels=64,
+                out_channels=64,
+                kernel_size=3,
+                stride=1
+            ),
+            nn.ReLU(),
+            nn.Conv2d(
+                in_channels=64,
+                out_channels=64,
+                kernel_size=3,
+                stride=1
+            ),
+            nn.ReLU(),
+            nn.Conv2d(
+                in_channels=64,
+                out_channels=64,
+                kernel_size=3,
+                stride=1
+            ),
+            nn.ReLU(),
+            nn.Flatten(),  # 1 * 13 * 64 = 832
+            nn.Linear(832, 512),
             nn.ReLU(),
             nn.Linear(512, 256),
+            nn.ReLU(),
+            nn.Linear(256, 128),
             nn.ReLU(),
         )
 
         self.actor_layers = nn.Sequential(
-            nn.Linear(256 + 2, 6)
+            nn.Linear(128 + 2, 6)
         )
 
         self.critic_layers = nn.Sequential(
-            nn.Linear(256 + 2, 1)
+            nn.Linear(128 + 2, 1)
         )
 
         self._shared_layer_out = None
