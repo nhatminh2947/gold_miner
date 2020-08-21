@@ -240,7 +240,7 @@ def featurize_v2(agent_names, alive_agents, obs, total_gold):
                     players,
                     np.copy(board),
                     np.full((1, obs.mapInfo.height + 1, obs.mapInfo.width + 1),
-                            fill_value=obs.players[i]["energy"] / (constants.MAX_ENERGY / 2))
+                            fill_value=max(0, obs.players[i]["energy"]) / (constants.MAX_ENERGY / 2))
                 ]),
                 "fc_features": position
             }
