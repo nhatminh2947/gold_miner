@@ -1,5 +1,5 @@
 import numpy as np
-
+import utils
 import constants
 from .game_socket_dummy import GameSocket  # in testing version, please use GameSocket instead of GAME_SOCKET_DUMMY
 from .miner_state import State
@@ -29,7 +29,9 @@ class MinerEnv:
         try:
             mapID = np.random.randint(1, 6)
             version = np.random.randint(0, 4)
-            # mapID = 0
+            mapID = 0
+            version = 0
+            # utils.generate_map()
             posID_x = np.random.randint(constants.N_COLS)
             posID_y = np.random.randint(constants.N_ROWS)
             # request = ("map" + str(mapID) + "," + str(posID_x) + "," + str(posID_y) + ",50,100")

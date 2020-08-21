@@ -145,3 +145,6 @@ cython_debug/
 .DS_Store
 
 nohup.out
+
+TrainedModel
+*.zip

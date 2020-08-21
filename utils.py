@@ -1,3 +1,5 @@
+import json
+
 import numpy as np
 
 import constants
@@ -329,8 +331,9 @@ def generate_map():
     n_digging_times = np.random.randint(100, 200) - n_gold_spots
 
     map = np.zeros((9, 21), dtype=int)
+    n_obstacles = 9 * 21 - n_gold_spots
 
-    while n_gold_spots:
+    while n_gold_spots > 0:
         i = np.random.randint(9)
         j = np.random.randint(21)
 
@@ -338,7 +341,7 @@ def generate_map():
             i = np.random.randint(9)
             j = np.random.randint(21)
         gold_q.append((i, j))
-        n_digging_this_spot = 1 + (np.ceil(np.random.normal(10, 5)) if n_gold_spots != 1 else n_digging_times)
+        n_digging_this_spot = 1 + (max(0, np.ceil(np.random.normal(10, 5))) if n_gold_spots != 1 else n_digging_times)
 
         map[i, j] = n_digging_this_spot * 50
         n_digging_times = max(0, n_digging_times - n_digging_this_spot)
@@ -349,7 +352,8 @@ def generate_map():
             jj = j + iy
 
             if 0 <= ii < 9 and 0 <= jj < 21 and np.random.random() < gold_next_to_prob:
-                n_digging_this_spot = 1 + (np.ceil(np.random.normal(10, 5)) if n_gold_spots != 1 else n_digging_times)
+                n_digging_this_spot = 1 + (
+                    max(0, np.ceil(np.random.normal(10, 5))) if n_gold_spots != 1 else n_digging_times)
                 map[ii, jj] = n_digging_this_spot * 50
                 n_digging_times = max(0, n_digging_times - n_digging_this_spot)
                 n_gold_spots -= 1
@@ -362,15 +366,28 @@ def generate_map():
                 xx = x + ix
                 yy = y + iy
 
-                if map[xx, yy] == 0 and np.random.random() < 0.75:
+                if inside_map(xx, yy) and map[xx, yy] == 0 and np.random.random() < 0.75:
                     map[xx, yy] = -obstacle_type
+                    n_obstacles -= 1
 
-    print(map)
-    with open("resources/Maps/map0_0", "w") as f:
-        import json
-        json.dump(map.tolist(), f)
+    while n_obstacles > 0:
+        i = np.random.randint(9)
+        j = np.random.randint(21)
 
-    return map
+        while map[i, j] != 0:
+            i = np.random.randint(9)
+            j = np.random.randint(21)
+
+        if np.random.random() < 0.5:
+            map[i, j] = -np.random.randint(1, 4)
+
+        n_obstacles -= 1
+
+    return json.dumps(map.tolist())
+
+
+def inside_map(row, col):
+    return 0 <= row < 9 and 0 <= col < 21
 
 
 def flip_map():

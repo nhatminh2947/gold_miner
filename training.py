@@ -1,6 +1,5 @@
 from typing import Dict
 
-import numpy as np
 import ray
 from ray import tune
 from ray.rllib.agents.callbacks import DefaultCallbacks
@@ -15,7 +14,7 @@ import arguments
 import constants
 from MinerTraining import Metrics
 from MinerTraining import PopulationBasedTraining
-from models import TorchRNNModel, SecondModel, ThirdModel,FourthModel
+from models import TorchRNNModel, SecondModel, ThirdModel, FourthModel, FifthModel
 from rllib_envs import v0
 from utils import policy_mapping
 
@@ -63,6 +62,7 @@ def register(env_config):
     ModelCatalog.register_custom_model("2nd_model", SecondModel)
     ModelCatalog.register_custom_model("3rd_model", ThirdModel)
     ModelCatalog.register_custom_model("4th_model", FourthModel)
+    ModelCatalog.register_custom_model("5th_model", FifthModel)
 
     tune.register_env("MinerEnv-v0", lambda x: v0.RllibMinerEnv(env_config))
 

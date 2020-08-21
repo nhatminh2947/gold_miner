@@ -1,7 +1,7 @@
 import ray
 import torch
 from ray.rllib.agents.ppo import PPOTrainer
-from models import ThirdModel, SecondModel
+from models import ThirdModel, SecondModel, FourthModel
 from training import initialize
 from utils import policy_mapping
 import constants
@@ -24,26 +24,27 @@ ppo_agent = PPOTrainer(config={
     "framework": "torch"
 }, env="MinerEnv-v0")
 
-id = 3
-checkpoint_dir = "/home/lucius/ray_results/testing_gm/PPO_MinerEnv-v0_0_2020-08-21_17-03-35g607qrhe"
+id = 240
+checkpoint_dir = "/home/lucius/ray_results/gold_miner/PPO_MinerEnv-v0_0_2020-08-21_18-29-335z24qauv"
 checkpoint = "{}/checkpoint_{}/checkpoint-{}".format(checkpoint_dir, id, id)
 
 ppo_agent.restore(checkpoint)
 
-mem_size = 0
-weights = ppo_agent.get_policy("policy_0").get_weights()
-for key in weights:
-    parameters = 1
-    for value in weights[key].shape:
-        parameters *= value
+for i in range(4):
+    mem_size = 0
+    weights = ppo_agent.get_policy(f"policy_{i}").get_weights()
+    for key in weights:
+        parameters = 1
+        for value in weights[key].shape:
+            parameters *= value
 
-    mem_size += parameters
+        mem_size += parameters
 
-    weights[key] = torch.tensor(weights[key])
-print(mem_size)
-torch.save(weights,
-           "/home/lucius/working/projects/gold_miner/MinerTrainingLocalCodeSample/TrainedModels/model_0.pt")
+        weights[key] = torch.tensor(weights[key])
+    print(mem_size)
+    torch.save(weights,
+               f"/home/lucius/working/projects/gold_miner/resources/TrainedModel/model_{i}.pt")
 
-model = SecondModel(constants.OBS_SPACE, constants.ACT_SPACE, 6, {}, "2rd_model", constants.NUM_FEATURES, None)
-model.load_state_dict(torch.load("/home/lucius/working/projects/gold_miner/MinerTrainingLocalCodeSample/TrainedModels/model_0.pt"))
+    model = FourthModel(constants.OBS_SPACE, constants.ACT_SPACE, 6, {}, "4th_model", constants.NUM_FEATURES)
+    model.load_state_dict(torch.load(f"/home/lucius/working/projects/gold_miner/resources/TrainedModel/model_{i}.pt"))
 
