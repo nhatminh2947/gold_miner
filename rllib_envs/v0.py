@@ -72,6 +72,7 @@ class RllibMinerEnv(MultiAgentEnv):
                     infos[self.agent_names[i]]["gold"] = raw_obs.players[i]["score"]
                     infos[self.agent_names[i]]["status"] = constants.Status(raw_obs.players[i]["status"])
                     infos[self.agent_names[i]]["metrics"] = self.stat[i]
+                    infos[self.agent_names[i]]["total_gold"] = self.total_gold
                     dones[self.agent_names[i]] = True
                     self.count_done += 1
 

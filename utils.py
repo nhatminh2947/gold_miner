@@ -334,7 +334,7 @@ def generate_map():
                  0.014, 0.014, 0.014, 0.014, 0.014, 0.014, 0.014, 0.014, 0.014, 0.014,
                  0.0005, 0.0005, 0.0005, 0.0005, 0.0005, 0.0005, 0.0005, 0.0005, 0.0005, 0.0005,
                  0.0005, 0.0005, 0.0005, 0.0005, 0.0005, 0.0005, 0.0005, 0.0005, 0.0005, 0.0005]
-    print(sum(gold_prob))
+
     total_gold = 0
     dx = [-1, 0, 0, 1]
     dy = [0, -1, 1, 0]
@@ -382,7 +382,7 @@ def generate_map():
         for j in range(21):
             if map[i, j] == 0 and np.random.random() < 0.55:
                 map[i, j] = -np.random.randint(1, 4)
-    print(total_gold)
+
     return json.dumps(map.tolist())
 
 

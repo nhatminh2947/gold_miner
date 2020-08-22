@@ -37,6 +37,8 @@ class MinerCallbacks(DefaultCallbacks):
             info = episode.last_info_for(agent_name)
             episode.custom_metrics[f"{policy}/gold"] = info["gold"]
             episode.custom_metrics[f"{policy}/win"] = info["win"]
+            episode.custom_metrics["total_gold"] = info["total_gold"]
+
             for key in Metrics:
                 episode.custom_metrics[f"{policy}/{key.name}"] = info["metrics"][key.name]
 
