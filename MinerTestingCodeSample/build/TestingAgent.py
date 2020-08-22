@@ -6,6 +6,7 @@ from MinerEnv import MinerEnv
 from fifth_model import FifthModel
 import sys
 import torch
+import utils
 
 ACTION_GO_LEFT = 0
 ACTION_GO_RIGHT = 1
@@ -13,7 +14,7 @@ ACTION_GO_UP = 2
 ACTION_GO_DOWN = 3
 ACTION_FREE = 4
 ACTION_CRAFT = 5
-i = 1
+i = 2
 HOST = "localhost"
 PORT = 1110 + i
 if len(sys.argv) == 3:
@@ -40,13 +41,14 @@ try:
 
     # minerEnv.send_map_info(request)
     minerEnv.reset()
-    obs = minerEnv.get_state()  ##Getting an initial state
+    obs, raw_obs = minerEnv.get_state()  ##Getting an initial state
     while not minerEnv.check_terminate():
         try:
+            utils.print_map(raw_obs)
             action = model.predict(obs)  # Getting an action from the trained model
             print("next action = ", action)
             minerEnv.step(str(action))  # Performing the action in order to obtain the new state
-            s_next = minerEnv.get_state()  # Getting a new state
+            s_next, raw_obs = minerEnv.get_state()  # Getting a new state
             obs = s_next
         except Exception as e:
             import traceback

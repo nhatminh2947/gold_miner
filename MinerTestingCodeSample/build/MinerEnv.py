@@ -145,6 +145,15 @@ class MinerEnv:
                     if j == cell["posx"] and i == cell["posy"]:
                         type, value = cell["type"], cell["value"]
 
+                if type is None and value is None:
+                    has_gold = False
+                    for cell in obs.mapInfo.golds:
+                        if j == cell["posx"] and i == cell["posy"]:
+                            has_gold = True
+
+                    if not has_gold:
+                        value = -1
+
                 if value == 0:  # Forest
                     obstacle_random[i, j] = 1
                 if value == -1:  # Land
@@ -208,7 +217,7 @@ class MinerEnv:
             }
         }
 
-        return featurized_obs
+        return featurized_obs, self.state
 
     def check_terminate(self):
         return self.state.status != State.STATUS_PLAYING

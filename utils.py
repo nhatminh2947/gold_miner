@@ -209,7 +209,7 @@ def featurize_v2(agent_names, alive_agents, obs, total_gold):
             obstacle_value_min[i, j] = (-value if value != 0 else 5) / constants.MAX_ENERGY
             obstacle_value_max[i, j] = (-value if value != 0 else 20) / constants.MAX_ENERGY
 
-            gold_amount[i, j] = obs.mapInfo.gold_amount(j, i) / 3000
+            gold_amount[i, j] = obs.mapInfo.gold_amount(j, i) / 2000
 
     for i in range(4):
         if obs.players[i]["status"] == constants.Status.STATUS_PLAYING.value:
@@ -330,15 +330,15 @@ def generate_map():
                   1550, 1600, 1650, 1700, 1750, 1800, 1850, 1900, 1950, 2000]
 
     gold_prob = [0.1,
-                 0.1, 0.1, 0.075, 0.075, 0.075, 0.075, 0.0625, 0.0625, 0.0625, 0.0625,
-                 0.014, 0.014, 0.014, 0.014, 0.014, 0.014, 0.014, 0.014, 0.014, 0.014,
+                 0.1, 0.1, 0.0725, 0.0725, 0.0725, 0.0725, 0.051, 0.051, 0.051, 0.051,
+                 0.0275, 0.0275, 0.0275, 0.0275, 0.015, 0.015, 0.015, 0.015, 0.015, 0.015,
                  0.0005, 0.0005, 0.0005, 0.0005, 0.0005, 0.0005, 0.0005, 0.0005, 0.0005, 0.0005,
-                 0.0005, 0.0005, 0.0005, 0.0005, 0.0005, 0.0005, 0.0005, 0.0005, 0.0005, 0.0005]
-
+                 0.0001, 0.0001, 0.0001, 0.0001, 0.0001, 0.0001, 0.0001, 0.0001, 0.0001, 0.0001]
+    # print(sum(gold_prob))
     total_gold = 0
     dx = [-1, 0, 0, 1]
     dy = [0, -1, 1, 0]
-    n_gold_spots = np.random.randint(15, 25)
+    n_gold_spots = np.random.randint(17, 25)
     # n_digging_times = np.random.randint(100, 150) - n_gold_spots
 
     map = np.zeros((9, 21), dtype=int)
