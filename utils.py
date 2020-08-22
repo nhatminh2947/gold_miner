@@ -323,12 +323,23 @@ def generate_map():
     gold_q = []
 
     gold_next_to_prob = 0.1
-    obstacle_prob = [0.75]
+    gold_value = [0,
+                  50, 100, 150, 200, 250, 300, 350, 400, 450, 500,
+                  550, 600, 650, 700, 750, 800, 850, 900, 950, 1000,
+                  1050, 1100, 1150, 1200, 1250, 1300, 1350, 1400, 1450, 1500,
+                  1550, 1600, 1650, 1700, 1750, 1800, 1850, 1900, 1950, 2000]
 
+    gold_prob = [0.1,
+                 0.1, 0.1, 0.075, 0.075, 0.075, 0.075, 0.0625, 0.0625, 0.0625, 0.0625,
+                 0.014, 0.014, 0.014, 0.014, 0.014, 0.014, 0.014, 0.014, 0.014, 0.014,
+                 0.0005, 0.0005, 0.0005, 0.0005, 0.0005, 0.0005, 0.0005, 0.0005, 0.0005, 0.0005,
+                 0.0005, 0.0005, 0.0005, 0.0005, 0.0005, 0.0005, 0.0005, 0.0005, 0.0005, 0.0005]
+    print(sum(gold_prob))
+    total_gold = 0
     dx = [-1, 0, 0, 1]
     dy = [0, -1, 1, 0]
     n_gold_spots = np.random.randint(15, 25)
-    n_digging_times = np.random.randint(100, 200) - n_gold_spots
+    # n_digging_times = np.random.randint(100, 150) - n_gold_spots
 
     map = np.zeros((9, 21), dtype=int)
     n_obstacles = 9 * 21 - n_gold_spots
@@ -341,10 +352,9 @@ def generate_map():
             i = np.random.randint(9)
             j = np.random.randint(21)
         gold_q.append((i, j))
-        n_digging_this_spot = 1 + (max(0, np.ceil(np.random.normal(10, 5))) if n_gold_spots != 1 else n_digging_times)
 
-        map[i, j] = n_digging_this_spot * 50
-        n_digging_times = max(0, n_digging_times - n_digging_this_spot)
+        map[i, j] = np.random.choice(gold_value, p=gold_prob)
+        total_gold += map[i, j]
         n_gold_spots -= 1
 
         for ix, iy in zip(dx, dy):
@@ -352,10 +362,8 @@ def generate_map():
             jj = j + iy
 
             if 0 <= ii < 9 and 0 <= jj < 21 and np.random.random() < gold_next_to_prob:
-                n_digging_this_spot = 1 + (
-                    max(0, np.ceil(np.random.normal(10, 5))) if n_gold_spots != 1 else n_digging_times)
-                map[ii, jj] = n_digging_this_spot * 50
-                n_digging_times = max(0, n_digging_times - n_digging_this_spot)
+                map[ii, jj] = np.random.choice(gold_value, p=gold_prob)
+                total_gold += map[ii, jj]
                 n_gold_spots -= 1
                 gold_q.append((ii, jj))
 
@@ -370,19 +378,11 @@ def generate_map():
                     map[xx, yy] = -obstacle_type
                     n_obstacles -= 1
 
-    while n_obstacles > 0:
-        i = np.random.randint(9)
-        j = np.random.randint(21)
-
-        while map[i, j] != 0:
-            i = np.random.randint(9)
-            j = np.random.randint(21)
-
-        if np.random.random() < 0.5:
-            map[i, j] = -np.random.randint(1, 4)
-
-        n_obstacles -= 1
-
+    for i in range(9):
+        for j in range(21):
+            if map[i, j] == 0 and np.random.random() < 0.55:
+                map[i, j] = -np.random.randint(1, 4)
+    print(total_gold)
     return json.dumps(map.tolist())
 
 
