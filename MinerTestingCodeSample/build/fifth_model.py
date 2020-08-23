@@ -1,6 +1,7 @@
 import torch
 from torch import nn
 
+
 class FifthModel(nn.Module):
     def __init__(self):
         nn.Module.__init__(self)
@@ -8,38 +9,6 @@ class FifthModel(nn.Module):
         self.shared_layers = nn.Sequential(
             nn.Conv2d(
                 in_channels=16,
-                out_channels=64,
-                kernel_size=3,
-                padding=1,
-                stride=1
-            ),
-            nn.ELU(),
-            nn.Conv2d(
-                in_channels=64,
-                out_channels=64,
-                kernel_size=3,
-                padding=1,
-                stride=1
-            ),
-            nn.ELU(),
-            nn.Conv2d(
-                in_channels=64,
-                out_channels=64,
-                kernel_size=3,
-                padding=1,
-                stride=1
-            ),
-            nn.ELU(),
-            nn.Conv2d(
-                in_channels=64,
-                out_channels=64,
-                kernel_size=3,
-                padding=1,
-                stride=1
-            ),
-            nn.ELU(),
-            nn.Conv2d(
-                in_channels=64,
                 out_channels=64,
                 kernel_size=3,
                 padding=1,

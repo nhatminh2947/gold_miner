@@ -253,6 +253,102 @@ def featurize_v2(agent_names, alive_agents, obs, total_gold):
     return featurized_obs
 
 
+def featurize_lstm_v3(agent_names, alive_agents, obs, total_gold):
+    players = np.zeros((4, obs.mapInfo.height + 1, obs.mapInfo.width + 1), dtype=float)
+    obstacle_1 = np.zeros([obs.mapInfo.height + 1, obs.mapInfo.width + 1], dtype=float)
+    obstacle_random = np.zeros([obs.mapInfo.height + 1, obs.mapInfo.width + 1], dtype=float)
+    obstacle_5 = np.zeros([obs.mapInfo.height + 1, obs.mapInfo.width + 1], dtype=float)
+    obstacle_10 = np.zeros([obs.mapInfo.height + 1, obs.mapInfo.width + 1], dtype=float)
+    obstacle_20 = np.zeros([obs.mapInfo.height + 1, obs.mapInfo.width + 1], dtype=float)
+    obstacle_40 = np.zeros([obs.mapInfo.height + 1, obs.mapInfo.width + 1], dtype=float)
+    obstacle_100 = np.zeros([obs.mapInfo.height + 1, obs.mapInfo.width + 1], dtype=float)
+    obstacle_value_min = np.zeros([obs.mapInfo.height + 1, obs.mapInfo.width + 1], dtype=float)
+    obstacle_value_max = np.zeros([obs.mapInfo.height + 1, obs.mapInfo.width + 1], dtype=float)
+
+    gold = np.zeros([obs.mapInfo.height + 1, obs.mapInfo.width + 1], dtype=float)
+    gold_amount = np.zeros([obs.mapInfo.height + 1, obs.mapInfo.width + 1], dtype=float)
+
+    for i in range(obs.mapInfo.height + 1):
+        for j in range(obs.mapInfo.width + 1):
+            type, value = obs.mapInfo.get_obstacle_type(j, i)
+            if value == 0:  # Forest
+                obstacle_random[i, j] = 1
+            if value == -1:  # Land
+                obstacle_1[i, j] = 1
+            if value == -5:  # Swamp 1
+                obstacle_5[i, j] = 1
+            if value == -10:  # Trap
+                obstacle_10[i, j] = 1
+            if value == -20:  # Swamp 2
+                obstacle_20[i, j] = 1
+            if value == -40:  # Swamp 3
+                obstacle_40[i, j] = 1
+            if value == -100:  # Swamp 4
+                obstacle_100[i, j] = 1
+            if value is None:  # Gold spot
+                gold[i, j] = 1
+                value = -4
+
+            obstacle_value_min[i, j] = (-value if value != 0 else 5) / constants.MAX_ENERGY
+            obstacle_value_max[i, j] = (-value if value != 0 else 20) / constants.MAX_ENERGY
+
+            gold_amount[i, j] = obs.mapInfo.gold_amount(j, i) / 2000
+
+    for i in range(4):
+        if obs.players[i]["status"] == constants.Status.STATUS_PLAYING.value:
+            players[i][obs.players[i]["posy"], obs.players[i]["posx"]] = 1
+
+    board = np.stack([
+        obstacle_random,
+        obstacle_1,
+        obstacle_5,
+        obstacle_10,
+        obstacle_20,
+        obstacle_40,
+        obstacle_100,
+        obstacle_value_min,
+        obstacle_value_max,
+        gold,
+        gold_amount
+    ])
+    # board = np.concatenate([players, board])
+
+    featurized_obs = {}
+
+    energy_of_agents = []
+    for i, agent_name in enumerate(agent_names):
+        if agent_name in alive_agents:
+            energy_of_agents.append(obs.players[i]["energy"] / constants.MAX_ENERGY)
+        else:
+            energy_of_agents.append(0)
+
+    for i, agent_name in enumerate(agent_names):
+        if agent_name in alive_agents:
+            position = np.clip(np.array([obs.players[i]["posy"] / 8 * 2 - 1,
+                                         obs.players[i]["posx"] / 20 * 2 - 1]), -1, 1)
+            tmp_energy = energy_of_agents.copy()
+
+            del tmp_energy[i]
+
+            featurized_obs[agent_name] = {
+                "conv_features": np.concatenate([
+                    players,
+                    np.copy(board),
+                    np.full((1, obs.mapInfo.height + 1, obs.mapInfo.width + 1),
+                            fill_value=max(0, obs.players[i]["energy"]) / (constants.MAX_ENERGY / 2))
+                ]),
+                "fc_features": np.concatenate([
+                    tmp_energy,
+                    position
+                ])
+            }
+
+        if i + 1 < 4:
+            players[[0, i + 1]] = players[[i + 1, 0]]
+
+    return featurized_obs
+
+
 def print_map(obs):
     width = 8
     print(f"Steps: {obs.stepCount}")
@@ -322,24 +418,27 @@ def print_map(obs):
 def generate_map():
     gold_q = []
 
-    gold_next_to_prob = 0.1
+    gold_next_to_prob = 0.20 / 8
     gold_value = [0,
                   50, 100, 150, 200, 250, 300, 350, 400, 450, 500,
                   550, 600, 650, 700, 750, 800, 850, 900, 950, 1000,
                   1050, 1100, 1150, 1200, 1250, 1300, 1350, 1400, 1450, 1500,
                   1550, 1600, 1650, 1700, 1750, 1800, 1850, 1900, 1950, 2000]
 
-    gold_prob = [0.1,
-                 0.1, 0.1, 0.0725, 0.0725, 0.0725, 0.0725, 0.051, 0.051, 0.051, 0.051,
-                 0.0275, 0.0275, 0.0275, 0.0275, 0.015, 0.015, 0.015, 0.015, 0.015, 0.015,
-                 0.0005, 0.0005, 0.0005, 0.0005, 0.0005, 0.0005, 0.0005, 0.0005, 0.0005, 0.0005,
+    gold_prob = [0.08,
+                 0.1, 0.1, 0.0725, 0.0725, 0.0725, 0.0725, 0.0535, 0.0535, 0.0535, 0.0535,
+                 0.0275, 0.0275, 0.0275, 0.0275, 0.025, 0.025, 0.015, 0.015, 0.01125, 0.01125,
+                 0.00025, 0.00025, 0.00025, 0.00025, 0.00025, 0.00025, 0.00025, 0.00025, 0.00025, 0.00025,
                  0.0001, 0.0001, 0.0001, 0.0001, 0.0001, 0.0001, 0.0001, 0.0001, 0.0001, 0.0001]
     # print(sum(gold_prob))
     total_gold = 0
-    dx = [-1, 0, 0, 1]
-    dy = [0, -1, 1, 0]
+    # dx = [-1, 0, 0, 1]
+    # dy = [0, -1, 1, 0]
     n_gold_spots = np.random.randint(17, 25)
     # n_digging_times = np.random.randint(100, 150) - n_gold_spots
+
+    dx = [-1, -1, -1, 0, 0, 1, 1, 1]
+    dy = [-1, 0, 1, -1, 1, -1, 0, 1]
 
     map = np.zeros((9, 21), dtype=int)
     n_obstacles = 9 * 21 - n_gold_spots
@@ -382,6 +481,7 @@ def generate_map():
         for j in range(21):
             if map[i, j] == 0 and np.random.random() < 0.55:
                 map[i, j] = -np.random.randint(1, 4)
+    print(total_gold)
 
     return json.dumps(map.tolist())
 
@@ -407,4 +507,9 @@ def flip_map():
 
 
 if __name__ == '__main__':
-    generate_map()
+    total_gold = 0
+    for i in range(10000):
+        _, gold = generate_map()
+        total_gold += gold
+
+    print(total_gold / 10000)
