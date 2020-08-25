@@ -24,8 +24,8 @@ ppo_agent = PPOTrainer(config={
     "framework": "torch"
 }, env="MinerEnv-v0")
 
-id = 380
-checkpoint_dir = "/home/lucius/ray_results/gold_miner/PPO_MinerEnv-v0_0_2020-08-23_01-36-45u0va9gwx"
+id = 1180
+checkpoint_dir = "/home/lucius/ray_results/gold_miner/PPO_MinerEnv-v0_0_2020-08-24_18-55-44663jhcow"
 checkpoint = "{}/checkpoint_{}/checkpoint-{}".format(checkpoint_dir, id, id)
 
 ppo_agent.restore(checkpoint)

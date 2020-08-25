@@ -1,8 +1,8 @@
-import sys
 import json
 import math
-from random import randrange
 import socket
+import sys
+from random import randrange
 
 MAP = "[[0,0,-2,100,0,0,-1,-1,-3,0,0,0,-1,-1,0,0,-3,0,-1,-1,0],[-1,-1,-2,0,0,0,-3,-1,0,-2,0,0,0,-1,0,-1,0,-2,-1,0,0],[0,0,-1,0,0,0,0,-1,-1,-1,0,0,100,0,0,0,0,50,-2,0,0],[0,0,0,0,-2,0,0,0,0,0,0,0,-1,50,-2,0,0,-1,-1,0,0],[-2,0,200,-2,-2,300,0,0,-2,-2,0,0,-3,0,-1,0,0,-3,-1,0,0],[0,-1,0,0,0,0,0,-3,0,0,-1,-1,0,0,0,0,0,0,-2,0,0],[0,-1,-1,0,0,-1,-1,0,0,700,-1,0,0,0,-2,-1,-1,0,0,0,100],[0,0,0,500,0,0,-1,0,-2,-2,-1,-1,0,0,-2,0,-3,0,0,-1,0],[-1,-1,0,-2,0,-1,-2,0,400,-2,-1,-1,500,0,-2,0,-3,100,0,0,0]]"
 POS_X = 0
@@ -11,6 +11,7 @@ E = 50
 MAX_STEP = 100
 W = 21
 H = 9
+
 
 class ObstacleInfo:
     # initial energy for obstacles: Land (key = 0): -1, Forest(key = -1): 0 (random), Trap(key = -2): -10, Swamp (key = -3): -5
@@ -111,7 +112,8 @@ class GameSocket:
         self.user = PlayerInfo(1)
         self.stepState = StepState()
         self.map = json.loads(MAP)  # running map info: 0->Land, -1->Forest, -2->Trap, -3:Swamp, >0:Gold
-        self.energyOnMap = json.loads(MAP)  # self.energyOnMap[x][y]: <0, amount of energy which player will consume if it move into (x,y)
+        self.energyOnMap = json.loads(
+            MAP)  # self.energyOnMap[x][y]: <0, amount of energy which player will consume if it move into (x,y)
         self.E = E
         self.stepCount = 0
         self.craftUsers = []  # players that craft at current step - for calculating amount of gold
@@ -196,7 +198,7 @@ class GameSocket:
             user.energy -= 10
             if user.energy <= 0:
                 user.status = PlayerInfo.STATUS_ELIMINATED_OUT_OF_ENERGY
-                user.lastAction = 6 #eliminated
+                user.lastAction = 6  # eliminated
         else:
             user.energy -= 5
             if user.energy > 0:
@@ -209,14 +211,14 @@ class GameSocket:
                     self.craftMap[key] = 1
             else:
                 user.status = PlayerInfo.STATUS_ELIMINATED_OUT_OF_ENERGY
-                user.lastAction = 6 #eliminated
+                user.lastAction = 6  # eliminated
 
     def action_0_left(self, user):  # user go left
         user.freeCount = 0
         user.posx = user.posx - 1
         if user.posx < 0:
             user.status = PlayerInfo.STATUS_ELIMINATED_WENT_OUT_MAP
-            user.lastAction = 6 #eliminated
+            user.lastAction = 6  # eliminated
         else:
             self.go_to_pos(user)
 
@@ -225,7 +227,7 @@ class GameSocket:
         user.posx = user.posx + 1
         if user.posx >= self.userMatch.gameinfo.width:
             user.status = PlayerInfo.STATUS_ELIMINATED_WENT_OUT_MAP
-            user.lastAction = 6 #eliminated
+            user.lastAction = 6  # eliminated
         else:
             self.go_to_pos(user)
 
@@ -234,7 +236,7 @@ class GameSocket:
         user.posy = user.posy - 1
         if user.posy < 0:
             user.status = PlayerInfo.STATUS_ELIMINATED_WENT_OUT_MAP
-            user.lastAction = 6 #eliminated
+            user.lastAction = 6  # eliminated
         else:
             self.go_to_pos(user)
 
@@ -243,7 +245,7 @@ class GameSocket:
         user.posy = user.posy + 1
         if user.posy >= self.userMatch.gameinfo.height:
             user.status = PlayerInfo.STATUS_ELIMINATED_WENT_OUT_MAP
-            user.lastAction = 6 #eliminated
+            user.lastAction = 6  # eliminated
         else:
             self.go_to_pos(user)
 
@@ -298,7 +300,7 @@ class GameSocket:
 
     def invalid_action(self, user):
         user.status = PlayerInfo.STATUS_ELIMINATED_INVALID_ACTION
-        user.lastAction = 6 #eliminated
+        user.lastAction = 6  # eliminated
 
     def go_to_pos(self, user):  # player move to cell(x,y)
         if self.map[user.posy][user.posx] == -1:
@@ -316,7 +318,7 @@ class GameSocket:
             user.energy -= 4
         if user.energy <= 0:
             user.status = PlayerInfo.STATUS_ELIMINATED_OUT_OF_ENERGY
-            user.lastAction = 6 #eliminated
+            user.lastAction = 6  # eliminated
 
     def add_changed_obstacle(self, x, y, t, v):
         added = False
@@ -352,7 +354,7 @@ if __name__ == "__main__":
 
     game = GameSocket()
     game.setup()
-    conn.send(bytes(game.get_game_info(),"utf-8"))
+    conn.send(bytes(game.get_game_info(), "utf-8"))
     while game.user.status == 0:
         data = conn.recv(1024)
         game.receive(data)

@@ -99,7 +99,9 @@ class FifthModel(nn.Module):
     def predict(self, input_dict):
         x = self.forward(input_dict, [], None)[0]
         print(x)
-        return torch.argmax(x).item()
+        x = torch.argmax(x).item()
+        print(x)
+        return x
 
     def value_function(self):
         return torch.reshape(self.critic_layers(self._shared_layer_out), [-1])

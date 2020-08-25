@@ -14,17 +14,17 @@ ACTION_GO_UP = 2
 ACTION_GO_DOWN = 3
 ACTION_FREE = 4
 ACTION_CRAFT = 5
-i = 2
+
 HOST = "localhost"
-PORT = 1110 + i
+PORT = 1111
 if len(sys.argv) == 3:
     HOST = str(sys.argv[1])
     PORT = int(sys.argv[2])
 
-model = FifthModel()
-model.load_state_dict(
-    torch.load(f"./TrainedModels/model_{i}.pt"))
-model.to('cpu')
+models = [FifthModel(), FifthModel(), FifthModel(), FifthModel()]
+for i, model in enumerate(models):
+    model.load_state_dict(torch.load(f"./TrainedModels/model_{i}.pt"))
+    model.to('cpu')
 
 # Choosing a map in the list
 # mapID = np.random.randint(1, 6)  # Choosing a map ID from 5 maps in Maps folder randomly
@@ -45,7 +45,23 @@ try:
     while not minerEnv.check_terminate():
         try:
             utils.print_map(raw_obs)
-            action = model.predict(obs)  # Getting an action from the trained model
+            votes = {i: 0 for i in range(6)}
+            best_model_act = models[2].predict(obs)
+            # votes[best_model_act] += 1
+            for model in models:
+                votes[model.predict(obs)] += 1
+
+            choosen_move = None
+            max_count = -1
+            for move in votes:
+                if votes[move] > max_count:
+                    choosen_move = move
+                    max_count = votes[move]
+
+            if votes[best_model_act] == max_count:
+                choosen_move = best_model_act
+
+            action = choosen_move  # Getting an action from the trained model
             print("next action = ", action)
             minerEnv.step(str(action))  # Performing the action in order to obtain the new state
             s_next, raw_obs = minerEnv.get_state()  # Getting a new state

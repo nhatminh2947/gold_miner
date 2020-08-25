@@ -9,10 +9,11 @@ from color_text import ColorText
 def print_map(obs):
     width = 8
     print(f"Steps: {obs.stepCount}")
-    # print(f"Energy ", end='')
-    # for i in range(4):
-    #     print(f"({i}):{obs.players[i]['energy']:5}\t", end='')
-    # print()
+    print(f"Energy ", end='')
+    for i, player in enumerate(obs.players):
+        if "energy" in player:
+            print(f"({i}):{player['energy']:5}\t", end='')
+    print()
 
     # print(f"Gold   ", end='')
     # for i in range(4):
