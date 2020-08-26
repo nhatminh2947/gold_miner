@@ -15,8 +15,9 @@ ACTION_GO_DOWN = 3
 ACTION_FREE = 4
 ACTION_CRAFT = 5
 
+id = 5
 HOST = "localhost"
-PORT = 1111
+PORT = 1110 + id
 if len(sys.argv) == 3:
     HOST = str(sys.argv[1])
     PORT = int(sys.argv[2])
@@ -61,7 +62,7 @@ try:
             if votes[best_model_act] == max_count:
                 choosen_move = best_model_act
 
-            action = choosen_move  # Getting an action from the trained model
+            action = best_model_act  # Getting an action from the trained model
             print("next action = ", action)
             minerEnv.step(str(action))  # Performing the action in order to obtain the new state
             s_next, raw_obs = minerEnv.get_state()  # Getting a new state

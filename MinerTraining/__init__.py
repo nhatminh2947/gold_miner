@@ -5,4 +5,3 @@ from .user_match import UserMatch
 from .obstacle_info import ObstacleInfo
 from .miner_env import MinerEnv
 from .metrics import Metrics
-from .population_based_training import PopulationBasedTraining

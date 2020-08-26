@@ -1,6 +1,7 @@
 import copy
 
 import numpy as np
+import ray
 from ray.rllib.env.multi_agent_env import MultiAgentEnv
 
 import constants
@@ -16,18 +17,13 @@ class RllibMinerEnv(MultiAgentEnv):
         self.env.start()
         self.agent_names = None
 
-        self.policy_names = [
-            "policy_0",
-            "policy_1",
-            "policy_2",
-            "policy_3",
-        ]
-
+        self.policy_names = config["policy_names"]
         self.is_render = config["render"]
 
         self.prev_gold_map = None
         self.prev_raw_obs = None
         self.prev_score = [0, 0, 0, 0]
+        self.prev_energy = [0, 0, 0, 0]
         self.episode_len = 0
 
         self.count_done = 0
@@ -139,11 +135,17 @@ class RllibMinerEnv(MultiAgentEnv):
                     rewards[agent_name] += 0.001
 
                 self.prev_score[i] = players[i]["score"]
+                self.prev_energy[i] = players[i]["energy"]
 
         return rewards, win_loss
 
     def _rewards_v1(self, alive_agents, players, raw_obs):
-        rewards = {}
+        exploration_rewards = {}
+        game_rewards = {agent_name: 0 for agent_name in self.agent_names}
+        energy_rewards = {}
+
+        final_rewards = {}
+
         win_loss = {}
 
         max_score = -1
@@ -159,53 +161,63 @@ class RllibMinerEnv(MultiAgentEnv):
 
         for i, agent_name in enumerate(self.agent_names):
             if agent_name in alive_agents:
-                rewards[agent_name] = (players[i]["score"] - self.prev_score[i]) / 50 * 0.02
+                exploration_rewards[agent_name] = (players[i]["score"] - self.prev_score[i]) / 50
+                energy_rewards[agent_name] = (players[i]["energy"] - self.prev_energy[i])
 
                 if players[i]["status"] in [constants.Status.STATUS_STOP_END_STEP.value,
                                             constants.Status.STATUS_STOP_EMPTY_GOLD.value]:
                     if players[i]["score"] == 0:
-                        rewards[agent_name] = -1
+                        game_rewards[agent_name] = -1
                         win_loss[agent_name] = 0
                     elif players[i]["score"] == max_score:
                         if players[i]["energy"] >= max_energy:
-                            # rewards[agent_name] = 1
+                            game_rewards[agent_name] = 1
                             win_loss[agent_name] = 1
                         else:
-                            # rewards[agent_name] = -1
+                            game_rewards[agent_name] = -1
                             win_loss[agent_name] = 0
                     else:
-                        # rewards[agent_name] = -1
+                        game_rewards[agent_name] = -1
                         win_loss[agent_name] = 0
 
                 elif players[i]["status"] in [constants.Status.STATUS_ELIMINATED_WENT_OUT_MAP.value,
                                               constants.Status.STATUS_ELIMINATED_OUT_OF_ENERGY.value]:
-                    rewards[agent_name] = -1
+                    exploration_rewards[agent_name] = -1
                     win_loss[agent_name] = 0
 
                 if players[i]["lastAction"] == constants.Action.ACTION_CRAFT.value \
                         and self.prev_raw_obs.mapInfo.gold_amount(players[i]["posx"], players[i]["posy"]) == 0:
-                    # rewards[agent_name] -= 0.05
+                    # exploration_rewards[agent_name] -= 0.05
                     self.stat[i][Metrics.INVALID_CRAFT.name] += 1
                 elif players[i]["lastAction"] in [constants.Action.ACTION_GO_UP.value,
                                                   constants.Action.ACTION_GO_DOWN.value,
                                                   constants.Action.ACTION_GO_LEFT.value,
                                                   constants.Action.ACTION_GO_RIGHT.value] \
                         and raw_obs.mapInfo.gold_amount(players[i]["posx"], players[i]["posy"]):
-                    rewards[agent_name] += 0.001
+                    exploration_rewards[agent_name] += 0.1
                 elif players[i]["lastAction"] == constants.Action.ACTION_FREE.value \
                         and self.prev_raw_obs.players[i]["energy"] > 40:
-                    # rewards[agent_name] -= 0.02
                     self.stat[i][Metrics.INVALID_FREE.name] += 1
 
                 if raw_obs.mapInfo.gold_amount(players[i]["posx"], players[i]["posy"]) == 0:
                     if not (players[i]["lastAction"] and self.prev_raw_obs.mapInfo.gold_amount(players[i]["posx"],
                                                                                                players[i]["posy"])):
-                        # rewards[agent_name] -= 0.001
                         self.stat[i][Metrics.FINDING_GOLD.name] += 1
 
                 self.prev_score[i] = players[i]["score"]
+                self.prev_energy[i] = players[i]["energy"]
 
-        return rewards, win_loss
+        helper = ray.get_actor("helper")
+        for i, agent_name in enumerate(self.agent_names):
+            if agent_name in alive_agents:
+                policy_name = agent_name[:-2]
+                w0, w1, w2 = ray.get(helper.get_reward_coeff.remote(policy_name))
+
+                final_rewards[agent_name] = w0 * exploration_rewards[agent_name] \
+                                            + w1 * game_rewards[agent_name] \
+                                            + w2 * energy_rewards[agent_name]
+
+        return final_rewards, win_loss
 
     def reset(self):
         raw_obs = self.env.reset()
@@ -215,11 +227,12 @@ class RllibMinerEnv(MultiAgentEnv):
             self.total_gold += cell["amount"]
 
         self.prev_score = [0, 0, 0, 0]
+        self.prev_energy = [50, 50, 50, 50]
         self.count_done = 0
         self.prev_raw_obs = copy.deepcopy(raw_obs)
         self.episode_len = 0
 
-        self.agent_names = list(np.random.permutation(self.policy_names))
+        self.agent_names = list(np.random.choice(self.policy_names, 4, replace=False))
         for i in range(4):
             self.agent_names[i] = f"{self.agent_names[i]}_{i}"
 

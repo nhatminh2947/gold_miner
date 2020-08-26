@@ -3,7 +3,6 @@ from typing import Dict
 import ray
 from ray import tune
 from ray.rllib.agents.callbacks import DefaultCallbacks
-from ray.rllib.agents.ppo import PPOTrainer
 from ray.rllib.agents.ppo.ppo_torch_policy import PPOTorchPolicy
 from ray.rllib.env import BaseEnv
 from ray.rllib.evaluation import MultiAgentEpisode, RolloutWorker
@@ -13,9 +12,11 @@ from ray.rllib.policy import Policy
 import arguments
 import constants
 from MinerTraining import Metrics
-from MinerTraining import PopulationBasedTraining
+from helper import Helper
 from models import TorchRNNModel, SecondModel, ThirdModel, FourthModel, FifthModel, SixthModel
+from population_based_training import PopulationBasedTraining
 from rllib_envs import v0
+from trainer.gm_trainer import GoldMinerTrainer
 from utils import policy_mapping
 
 parser = arguments.get_parser()
@@ -27,7 +28,7 @@ class MinerCallbacks(DefaultCallbacks):
     def __init__(self):
         super().__init__()
 
-        self.pbt = PopulationBasedTraining(ready=params["ready"])
+        self.pbt = PopulationBasedTraining(params["policy_names"], burn_in=params["burn_in"], ready=params["ready"])
 
     def on_episode_end(self, worker: RolloutWorker, base_env: BaseEnv,
                        policies: Dict[str, Policy],
@@ -48,15 +49,13 @@ class MinerCallbacks(DefaultCallbacks):
                            constants.Status.STATUS_STOP_EMPTY_GOLD]:
                 episode.custom_metrics[f"{policy}/{status.name}"] = int(status.name == info["status"].name)
 
-    # def on_train_result(self, trainer, result: dict, **kwargs):
-    #     if result["custom_metrics"]:
-    #         if result["timesteps_total"] - self.pbt.last_update >= self.pbt.ready:
-    #             self.pbt.run(trainer, result)
-    #             self.pbt.last_update = result["timesteps_total"]
-    #
-    #         for i in range(4):
-    #             result["custom_metrics"][f"policy_{i}/clip_param"] \
-    #                 = trainer.get_policy(f"policy_{i}").config["clip_param"]
+    def on_train_result(self, trainer, result: dict, **kwargs):
+        if result["custom_metrics"]:
+            self.pbt.run(trainer, result)
+
+            for i in range(4):
+                result["custom_metrics"][f"policy_{i}/clip_param"] \
+                    = trainer.get_policy(f"policy_{i}").config["clip_param"]
 
 
 def register(env_config):
@@ -71,16 +70,6 @@ def register(env_config):
 
 
 def initialize():
-    env_config = {
-        "game_state_file": params["game_state_file"],
-        "host": "localhost",
-        "port": 1234,
-        "evaluate": False,
-        "render": params["render"]
-    }
-
-    register(env_config)
-
     # Policy setting
     def gen_policy():
         config = {
@@ -95,18 +84,30 @@ def initialize():
             "framework": "torch",
             "explore": params["explore"]
         }
-        return PPOTorchPolicy, constants.OBS_SPACE, constants.ACT_SPACE, config
+        return None, constants.OBS_SPACE, constants.ACT_SPACE, config
 
     policies = {
-        "policy_0": gen_policy(),
-        "policy_1": gen_policy(),
-        "policy_2": gen_policy(),
-        "policy_3": gen_policy(),
+        f"policy_{i}": gen_policy() for i in range(params["population_size"])
     }
 
     policy_names = list(policies.keys())
 
     print("Training policies:", policies.keys())
+    params["policy_names"] = policy_names
+    env_config = {
+        "game_state_file": params["game_state_file"],
+        "host": "localhost",
+        "port": 1234,
+        "evaluate": False,
+        "render": params["render"],
+        "policy_names": policy_names
+    }
+
+    register(env_config)
+
+    Helper.options(name="helper").remote(
+        policy_names=policy_names
+    )
 
     return env_config, policies, policy_names
 
@@ -114,7 +115,7 @@ def initialize():
 def training_team():
     env_config, policies, policies_to_train = initialize()
 
-    trainer = PPOTrainer
+    trainer = GoldMinerTrainer
 
     trials = tune.run(
         trainer,
