@@ -8,7 +8,6 @@ class PopulationBasedTraining:
         self.perturb_val = perturb_val
         self.burn_in = burn_in
         self.ready = ready
-        self.last_update = 0
 
         self.policy_names = policy_names
 
@@ -21,6 +20,10 @@ class PopulationBasedTraining:
             "energy_reward_coeff": (1e-4, 1e-2)
         }
 
+        self.last_update = {
+            policy_name: 0 for policy_name in self.policy_names
+        }
+
     def exploit(self, trainer, src, dest):
         self.copy_weight(trainer, src, dest)
 
@@ -30,9 +33,6 @@ class PopulationBasedTraining:
     def explore(self, trainer, src, dest):
         helper = ray.get_actor("helper")
         hyperparams = ray.get(helper.get_hyperparams.remote())
-
-        policy_src = trainer.get_policy(src)
-        policy_dest = trainer.get_policy(dest)
 
         self.copy_weight(trainer, src, dest)
 
@@ -55,6 +55,9 @@ class PopulationBasedTraining:
 
         return old_value * (1 + self.perturb_val)
 
+    def is_eligible(self, policy, timesteps):
+        return timesteps - self.last_update[policy] > self.ready
+
     def run(self, trainer, result):
         if self.burn_in >= result["timesteps_total"]:
             return
@@ -63,7 +66,8 @@ class PopulationBasedTraining:
 
         strongest_agents, weakest_agent = [], None
         for policy_name in self.policy_names:
-            if result["custom_metrics"][f"{policy_name}/gold_mean"] < min_average_gold:
+            if self.is_eligible(policy_name, result["timesteps_total"]) \
+                    and result["custom_metrics"][f"{policy_name}/gold_mean"] < min_average_gold:
                 min_average_gold = result["custom_metrics"][f"{policy_name}/gold_mean"]
                 weakest_agent = policy_name
 
@@ -72,6 +76,7 @@ class PopulationBasedTraining:
                 strongest_agents.append(policy_name)
 
         # self.exploit(trainer, f"policy_{strongest_agent}", f"policy_{weakest_agent}")
-        if strongest_agents:
+        if strongest_agents and weakest_agent:
+            self.last_update[weakest_agent] = result["timesteps_total"]
             the_choosen_one = np.random.choice(strongest_agents)
             self.explore(trainer, the_choosen_one, weakest_agent)

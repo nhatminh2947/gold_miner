@@ -3,7 +3,6 @@ from typing import Dict
 import ray
 from ray import tune
 from ray.rllib.agents.callbacks import DefaultCallbacks
-from ray.rllib.agents.ppo.ppo_torch_policy import PPOTorchPolicy
 from ray.rllib.env import BaseEnv
 from ray.rllib.evaluation import MultiAgentEpisode, RolloutWorker
 from ray.rllib.models import ModelCatalog
@@ -27,7 +26,7 @@ params = vars(args)
 class MinerCallbacks(DefaultCallbacks):
     def __init__(self):
         super().__init__()
-
+        self.policy_names = params["policy_names"]
         self.pbt = PopulationBasedTraining(params["policy_names"], burn_in=params["burn_in"], ready=params["ready"])
 
     def on_episode_end(self, worker: RolloutWorker, base_env: BaseEnv,
@@ -51,11 +50,15 @@ class MinerCallbacks(DefaultCallbacks):
 
     def on_train_result(self, trainer, result: dict, **kwargs):
         if result["custom_metrics"]:
+            helper = ray.get_actor("helper")
+            hyperparams = ray.get(helper.get_hyperparams.remote())
+
             self.pbt.run(trainer, result)
 
-            for i in range(4):
-                result["custom_metrics"][f"policy_{i}/clip_param"] \
-                    = trainer.get_policy(f"policy_{i}").config["clip_param"]
+            for policy_name in self.policy_names:
+                for param in hyperparams[policy_name]:
+                    if param not in ["lr", "entropy_coeff"]:
+                        result["custom_metrics"][f"{policy_name}/{param}"] = hyperparams[policy_name][param]
 
 
 def register(env_config):
