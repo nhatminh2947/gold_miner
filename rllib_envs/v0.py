@@ -143,6 +143,7 @@ class RllibMinerEnv(MultiAgentEnv):
         exploration_rewards = {}
         game_rewards = {agent_name: 0 for agent_name in self.agent_names}
         energy_rewards = {}
+        fixed_reward = {}
 
         final_rewards = {}
 
@@ -167,7 +168,7 @@ class RllibMinerEnv(MultiAgentEnv):
                 if players[i]["status"] in [constants.Status.STATUS_STOP_END_STEP.value,
                                             constants.Status.STATUS_STOP_EMPTY_GOLD.value]:
                     if players[i]["score"] == 0:
-                        game_rewards[agent_name] = -1
+                        fixed_reward[agent_name] = -1
                         win_loss[agent_name] = 0
                     elif players[i]["score"] == max_score:
                         if players[i]["energy"] >= max_energy:
@@ -182,7 +183,7 @@ class RllibMinerEnv(MultiAgentEnv):
 
                 elif players[i]["status"] in [constants.Status.STATUS_ELIMINATED_WENT_OUT_MAP.value,
                                               constants.Status.STATUS_ELIMINATED_OUT_OF_ENERGY.value]:
-                    exploration_rewards[agent_name] = -1
+                    fixed_reward[agent_name] = -1
                     win_loss[agent_name] = 0
 
                 if players[i]["lastAction"] == constants.Action.ACTION_CRAFT.value \
@@ -215,7 +216,8 @@ class RllibMinerEnv(MultiAgentEnv):
 
                 final_rewards[agent_name] = w0 * exploration_rewards[agent_name] \
                                             + w1 * game_rewards[agent_name] \
-                                            + w2 * energy_rewards[agent_name]
+                                            + w2 * energy_rewards[agent_name] \
+                                            + fixed_reward[agent_name]
 
         return final_rewards, win_loss
 
