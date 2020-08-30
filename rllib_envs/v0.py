@@ -1,7 +1,6 @@
 import copy
 
 import numpy as np
-import ray
 from ray.rllib.env.multi_agent_env import MultiAgentEnv
 
 import constants
@@ -208,15 +207,15 @@ class RllibMinerEnv(MultiAgentEnv):
                 self.prev_score[i] = players[i]["score"]
                 self.prev_energy[i] = players[i]["energy"]
 
-        helper = ray.get_actor("helper")
+        # helper = ray.get_actor("helper")
         for i, agent_name in enumerate(self.agent_names):
             if agent_name in alive_agents:
-                policy_name = agent_name[:-2]
-                w0, w1, w2 = ray.get(helper.get_reward_coeff.remote(policy_name))
+                # policy_name = agent_name[:-2]
+                # w0, w1, w2 = ray.get(helper.get_reward_coeff.remote(policy_name))
 
-                final_rewards[agent_name] = w0 * exploration_rewards[agent_name] \
-                                            + w1 * game_rewards[agent_name] \
-                                            + w2 * energy_rewards[agent_name] \
+                final_rewards[agent_name] = 0.02 * exploration_rewards[agent_name] \
+                                            + 0 * game_rewards[agent_name] \
+                                            + 0.0004 * energy_rewards[agent_name] \
                                             + fixed_reward[agent_name]
 
         return final_rewards, win_loss

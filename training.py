@@ -48,17 +48,17 @@ class MinerCallbacks(DefaultCallbacks):
                            constants.Status.STATUS_STOP_EMPTY_GOLD]:
                 episode.custom_metrics[f"{policy}/{status.name}"] = int(status.name == info["status"].name)
 
-    def on_train_result(self, trainer, result: dict, **kwargs):
-        if result["custom_metrics"]:
-            helper = ray.get_actor("helper")
-            hyperparams = ray.get(helper.get_hyperparams.remote())
-
-            self.pbt.run(trainer, result)
-
-            for policy_name in self.policy_names:
-                for param in hyperparams[policy_name]:
-                    if param not in ["lr", "entropy_coeff"]:
-                        result["custom_metrics"][f"{policy_name}/{param}"] = hyperparams[policy_name][param]
+    # def on_train_result(self, trainer, result: dict, **kwargs):
+    #     if result["custom_metrics"]:
+    #         helper = ray.get_actor("helper")
+    #         hyperparams = ray.get(helper.get_hyperparams.remote())
+    #
+    #         self.pbt.run(trainer, result)
+    #
+    #         for policy_name in self.policy_names:
+    #             for param in hyperparams[policy_name]:
+    #                 if param not in ["lr", "entropy_coeff"]:
+    #                     result["custom_metrics"][f"{policy_name}/{param}"] = hyperparams[policy_name][param]
 
 
 def register(env_config):
