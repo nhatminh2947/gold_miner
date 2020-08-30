@@ -28,6 +28,7 @@ class RllibMinerEnv(MultiAgentEnv):
         self.prev_gold_map = None
         self.prev_raw_obs = None
         self.prev_score = [0, 0, 0, 0]
+        self.prev_energy = [0, 0, 0, 0]
         self.episode_len = 0
 
         self.count_done = 0
@@ -160,6 +161,7 @@ class RllibMinerEnv(MultiAgentEnv):
         for i, agent_name in enumerate(self.agent_names):
             if agent_name in alive_agents:
                 rewards[agent_name] = (players[i]["score"] - self.prev_score[i]) / 50 * 0.02
+                rewards[agent_name] = (players[i]["energy"] - self.prev_energy[i]) * 0.0004
 
                 if players[i]["status"] in [constants.Status.STATUS_STOP_END_STEP.value,
                                             constants.Status.STATUS_STOP_EMPTY_GOLD.value]:
@@ -204,6 +206,7 @@ class RllibMinerEnv(MultiAgentEnv):
                         self.stat[i][Metrics.FINDING_GOLD.name] += 1
 
                 self.prev_score[i] = players[i]["score"]
+                self.prev_energy[i] = players[i]["energy"]
 
         return rewards, win_loss
 
@@ -215,6 +218,7 @@ class RllibMinerEnv(MultiAgentEnv):
             self.total_gold += cell["amount"]
 
         self.prev_score = [0, 0, 0, 0]
+        self.prev_energy = [0, 0, 0, 0]
         self.count_done = 0
         self.prev_raw_obs = copy.deepcopy(raw_obs)
         self.episode_len = 0
