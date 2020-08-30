@@ -162,7 +162,7 @@ def training_team():
                 "policies_to_train": policies_to_train,
             },
             "clip_actions": False,
-            "observation_filter": params["filter"],  # should use MeanStdFilter
+            "observation_filter": params["filter"],
             "evaluation_num_episodes": params["evaluation_num_episodes"],
             "evaluation_interval": params["evaluation_interval"],
             "metrics_smoothing_episodes": 100,

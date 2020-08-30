@@ -8,9 +8,9 @@ class Helper:
 
         self.hyperparams = {
             policy_name: {
-                "lr": 1e-4,
-                "clip_param": 0.2,
-                "entropy_coeff": 0.01,
+                # "lr": 1e-4,
+                # "clip_param": 0.2,
+                # "entropy_coeff": 0.01,
                 "exploration_reward_coeff": 0.01,
                 "game_reward_coeff": 0,
                 "energy_reward_coeff": 0

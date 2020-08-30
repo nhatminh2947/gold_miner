@@ -12,11 +12,11 @@ class PopulationBasedTraining:
         self.policy_names = policy_names
 
         self.hyperparams_range = {
-            "lr": (1e-4, 1e-3),
-            "clip_param": (0.1, 0.3),
-            "entropy_coeff": (1e-3, 1e-1),
+            # "lr": (1e-4, 1e-3),
+            # "clip_param": (0.1, 0.3),
+            # "entropy_coeff": (1e-3, 1e-1),
             "exploration_reward_coeff": (1e-2, 5e-2),
-            "game_reward_coeff": (0, 1),
+            "game_reward_coeff": (0, 0.25),
             "energy_reward_coeff": (1e-4, 1e-2)
         }
 
@@ -40,9 +40,9 @@ class PopulationBasedTraining:
             hyperparams[dest][param] = self.explore_helper(hyperparams[src][param],
                                                            self.hyperparams_range[param])
 
-        trainer.workers.local_worker().for_policy(lambda p: p.update_lr_schedule(hyperparams[dest]["lr"]), dest)
-        trainer.workers.local_worker().for_policy(lambda p: p.update_clip_param(hyperparams[dest]["clip_param"]), dest)
-        trainer.workers.local_worker().for_policy(lambda p: p.update_entropy(hyperparams[dest]["entropy_coeff"]), dest)
+        # trainer.workers.local_worker().for_policy(lambda p: p.update_lr_schedule(hyperparams[dest]["lr"]), dest)
+        # trainer.workers.local_worker().for_policy(lambda p: p.update_clip_param(hyperparams[dest]["clip_param"]), dest)
+        # trainer.workers.local_worker().for_policy(lambda p: p.update_entropy(hyperparams[dest]["entropy_coeff"]), dest)
 
         helper.set_hyperparams.remote(hyperparams)
 
