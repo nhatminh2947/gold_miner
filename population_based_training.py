@@ -63,6 +63,7 @@ class PopulationBasedTraining:
             return
 
         min_average_gold = 1000000
+        min_win_rate = 100
 
         strongest_agents, weakest_agent = [], None
         for policy_name in self.policy_names:
@@ -71,8 +72,13 @@ class PopulationBasedTraining:
                 min_average_gold = result["custom_metrics"][f"{policy_name}/gold_mean"]
                 weakest_agent = policy_name
 
+            if self.is_eligible(policy_name, result["timesteps_total"]) \
+                    and result["custom_metrics"][f"{policy_name}/win_mean"] < min_win_rate:
+                min_win_rate = result["custom_metrics"][f"{policy_name}/win_mean"]
+                weakest_agent = policy_name
+
         for policy_name in self.policy_names:
-            if min_average_gold / result["custom_metrics"][f"{policy_name}/gold_mean"] < 0.75:
+            if min_win_rate / (min_win_rate + result["custom_metrics"][f"{policy_name}/win_mean"]) < 0.40:
                 strongest_agents.append(policy_name)
 
         # self.exploit(trainer, f"policy_{strongest_agent}", f"policy_{weakest_agent}")
