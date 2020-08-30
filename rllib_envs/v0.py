@@ -140,10 +140,10 @@ class RllibMinerEnv(MultiAgentEnv):
         return rewards, win_loss
 
     def _rewards_v1(self, alive_agents, players, raw_obs):
-        exploration_rewards = {}
+        exploration_rewards = {agent_name: 0 for agent_name in self.agent_names}
         game_rewards = {agent_name: 0 for agent_name in self.agent_names}
-        energy_rewards = {}
-        fixed_reward = {}
+        energy_rewards = {agent_name: 0 for agent_name in self.agent_names}
+        fixed_reward = {agent_name: 0 for agent_name in self.agent_names}
 
         final_rewards = {}
 
