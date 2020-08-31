@@ -215,7 +215,7 @@ class RllibMinerEnv(MultiAgentEnv):
 
                 final_rewards[agent_name] = 0.02 * exploration_rewards[agent_name] \
                                             + 0 * game_rewards[agent_name] \
-                                            + 0.0004 * energy_rewards[agent_name] \
+                                            + 0.0002 * energy_rewards[agent_name] \
                                             + fixed_reward[agent_name]
 
         return final_rewards, win_loss

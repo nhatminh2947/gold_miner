@@ -477,11 +477,12 @@ def generate_map():
                     map[xx, yy] = -obstacle_type
                     n_obstacles -= 1
 
+    obstacle_prob = np.random.uniform(0.25, 0.65)
     for i in range(9):
         for j in range(21):
-            if map[i, j] == 0 and np.random.random() < 0.55:
+            if map[i, j] == 0 and np.random.random() < obstacle_prob:
                 map[i, j] = -np.random.randint(1, 4)
-    print(total_gold)
+    # print(total_gold)
 
     return json.dumps(map.tolist())
 
