@@ -3,6 +3,7 @@ from typing import Dict
 import ray
 from ray import tune
 from ray.rllib.agents.callbacks import DefaultCallbacks
+from ray.rllib.agents.ppo import PPOTrainer
 from ray.rllib.env import BaseEnv
 from ray.rllib.evaluation import MultiAgentEpisode, RolloutWorker
 from ray.rllib.models import ModelCatalog
@@ -15,7 +16,6 @@ from helper import Helper
 from models import TorchRNNModel, SecondModel, ThirdModel, FourthModel, FifthModel, SixthModel
 from population_based_training import PopulationBasedTraining
 from rllib_envs import v0
-from trainer.gm_trainer import GoldMinerTrainer
 from utils import policy_mapping
 
 parser = arguments.get_parser()
@@ -74,7 +74,7 @@ def register(env_config):
 
 def initialize():
     # Policy setting
-    def gen_policy():
+    def gen_policy(gamma):
         config = {
             "model": {
                 "max_seq_len": params["max_seq_len"],
@@ -84,13 +84,15 @@ def initialize():
                 },
                 "no_final_linear": True,
             },
+            "gamma": gamma,
             "framework": "torch",
             "explore": params["explore"]
         }
         return None, constants.OBS_SPACE, constants.ACT_SPACE, config
 
+    gamma = [0.9, 0.96, 0.98, 0.9875, 0.99, 0.995, 0.998, 0.99875, 0.999]
     policies = {
-        f"policy_{i}": gen_policy() for i in range(params["population_size"])
+        f"policy_{i}": gen_policy(gamma[i]) for i in range(params["population_size"])
     }
 
     policy_names = list(policies.keys())
@@ -118,8 +120,8 @@ def initialize():
 def training_team():
     env_config, policies, policies_to_train = initialize()
 
-    trainer = GoldMinerTrainer
-
+    # trainer = GoldMinerTrainer
+    trainer = PPOTrainer
     trials = tune.run(
         trainer,
         restore=params["restore"],
