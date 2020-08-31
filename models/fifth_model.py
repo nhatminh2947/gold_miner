@@ -19,7 +19,7 @@ class FifthModel(TorchModelV2, nn.Module):
                 padding=1,
                 stride=1
             ),
-            nn.ELU(),
+            nn.ReLU(),
             nn.Conv2d(
                 in_channels=64,
                 out_channels=64,
@@ -27,7 +27,7 @@ class FifthModel(TorchModelV2, nn.Module):
                 padding=1,
                 stride=1
             ),
-            nn.ELU(),
+            nn.ReLU(),
             nn.Conv2d(
                 in_channels=64,
                 out_channels=64,
@@ -35,7 +35,7 @@ class FifthModel(TorchModelV2, nn.Module):
                 padding=1,
                 stride=1
             ),
-            nn.ELU(),
+            nn.ReLU(),
             nn.Conv2d(
                 in_channels=64,
                 out_channels=64,
@@ -43,7 +43,7 @@ class FifthModel(TorchModelV2, nn.Module):
                 padding=1,
                 stride=1
             ),
-            nn.ELU(),
+            nn.ReLU(),
             nn.Conv2d(
                 in_channels=64,
                 out_channels=64,
@@ -51,7 +51,7 @@ class FifthModel(TorchModelV2, nn.Module):
                 padding=1,
                 stride=1
             ),
-            nn.ELU(),
+            nn.ReLU(),
             nn.Conv2d(
                 in_channels=64,
                 out_channels=64,
@@ -59,7 +59,7 @@ class FifthModel(TorchModelV2, nn.Module):
                 padding=1,
                 stride=1
             ),
-            nn.ELU(),
+            nn.ReLU(),
             nn.Conv2d(
                 in_channels=64,
                 out_channels=64,
@@ -67,7 +67,7 @@ class FifthModel(TorchModelV2, nn.Module):
                 padding=1,
                 stride=1
             ),
-            nn.ELU(),
+            nn.ReLU(),
             nn.Conv2d(
                 in_channels=64,
                 out_channels=64,
@@ -75,42 +75,42 @@ class FifthModel(TorchModelV2, nn.Module):
                 padding=1,
                 stride=1
             ),
-            nn.ELU(),
+            nn.ReLU(),
             nn.Conv2d(
                 in_channels=64,
                 out_channels=64,
                 kernel_size=3,
                 stride=1
             ),
-            nn.ELU(),
+            nn.ReLU(),
             nn.Conv2d(
                 in_channels=64,
                 out_channels=64,
                 kernel_size=3,
                 stride=1
             ),
-            nn.ELU(),
+            nn.ReLU(),
             nn.Conv2d(
                 in_channels=64,
                 out_channels=64,
                 kernel_size=3,
                 stride=1
             ),
-            nn.ELU(),
+            nn.ReLU(),
             nn.Conv2d(
                 in_channels=64,
                 out_channels=64,
                 kernel_size=3,
                 stride=1
             ),
-            nn.ELU(),
+            nn.ReLU(),
             nn.Flatten(),  # 1 * 13 * 64 = 832
             nn.Linear(832, 512),
-            nn.ELU(),
+            nn.ReLU(),
             nn.Linear(512, 256),
-            nn.ELU(),
+            nn.ReLU(),
             nn.Linear(256, 128),
-            nn.ELU(),
+            nn.ReLU(),
         )
 
         self.actor_layers = nn.Sequential(
