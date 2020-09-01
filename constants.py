@@ -18,7 +18,7 @@ BASE_ENERGY = 5
 
 OBS_SPACE = Dict({
     "conv_features": Box(low=-1, high=2, shape=(NUM_FEATURES, N_ROWS, N_COLS)),
-    "fc_features": Box(low=-1, high=1, shape=(2,))
+    "fc_features": Box(low=-1, high=1, shape=(20,))
 })
 
 ACT_SPACE = Discrete(6)

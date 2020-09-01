@@ -1,4 +1,5 @@
 import copy
+from collections import deque
 
 import numpy as np
 from ray.rllib.env.multi_agent_env import MultiAgentEnv
@@ -23,6 +24,13 @@ class RllibMinerEnv(MultiAgentEnv):
             "policy_3",
         ]
 
+        self.prev_actions = [
+            deque([4, 4, 4], maxlen=3),
+            deque([4, 4, 4], maxlen=3),
+            deque([4, 4, 4], maxlen=3),
+            deque([4, 4, 4], maxlen=3)
+        ]
+
         self.is_render = config["render"]
 
         self.prev_gold_map = None
@@ -44,6 +52,7 @@ class RllibMinerEnv(MultiAgentEnv):
             if self.agent_names[i] in action_dict:
                 actions.append(action_dict[self.agent_names[i]])
                 self.stat[i][Metrics(actions[-1]).name] += 1
+                self.prev_actions[i].append(action_dict[self.agent_names[i]])
             else:
                 actions.append(Action.ACTION_FREE.value)
 
@@ -54,7 +63,7 @@ class RllibMinerEnv(MultiAgentEnv):
         alive_agents = list(action_dict.keys())
         raw_obs = self.env.step(','.join([str(action) for action in actions]))
 
-        obs = utils.featurize_v2(self.agent_names, alive_agents, raw_obs, self.total_gold)
+        obs = utils.featurize_v2(self.agent_names, alive_agents, raw_obs, self.total_gold, self.prev_actions)
         rewards, win_loss = self._rewards_v1(alive_agents, raw_obs.players, raw_obs)
 
         dones = {}
@@ -161,7 +170,7 @@ class RllibMinerEnv(MultiAgentEnv):
         for i, agent_name in enumerate(self.agent_names):
             if agent_name in alive_agents:
                 rewards[agent_name] = (players[i]["score"] - self.prev_score[i]) / 50 * 0.02
-                rewards[agent_name] = (players[i]["energy"] - self.prev_energy[i]) * 0.0004
+                rewards[agent_name] = (players[i]["energy"] - self.prev_energy[i]) * 0.0001
 
                 if players[i]["status"] in [constants.Status.STATUS_STOP_END_STEP.value,
                                             constants.Status.STATUS_STOP_EMPTY_GOLD.value]:
@@ -219,6 +228,12 @@ class RllibMinerEnv(MultiAgentEnv):
 
         self.prev_score = [0, 0, 0, 0]
         self.prev_energy = [0, 0, 0, 0]
+        self.prev_actions = [
+            deque([4, 4, 4], maxlen=3),
+            deque([4, 4, 4], maxlen=3),
+            deque([4, 4, 4], maxlen=3),
+            deque([4, 4, 4], maxlen=3)
+        ]
         self.count_done = 0
         self.prev_raw_obs = copy.deepcopy(raw_obs)
         self.episode_len = 0
@@ -232,4 +247,4 @@ class RllibMinerEnv(MultiAgentEnv):
             self.stat.append({metric.name: 0 for metric in Metrics})
             self.stat[i][Metrics.ENERGY.name] = 50
 
-        return utils.featurize_v2(self.agent_names, self.agent_names, raw_obs, self.total_gold)
+        return utils.featurize_v2(self.agent_names, self.agent_names, raw_obs, self.total_gold, self.prev_actions)
