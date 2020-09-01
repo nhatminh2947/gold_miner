@@ -90,7 +90,7 @@ def initialize():
         }
         return None, constants.OBS_SPACE, constants.ACT_SPACE, config
 
-    gamma = [0.9, 0.96, 0.98, 0.9875, 0.99, 0.995, 0.998, 0.99875, 0.999]
+    gamma = [0.96, 0.98, 0.99, 0.999]
     policies = {
         f"policy_{i}": gen_policy(gamma[i]) for i in range(params["population_size"])
     }

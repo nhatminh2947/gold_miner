@@ -255,15 +255,13 @@ def featurize_v2(agent_names, alive_agents, obs, total_gold):
 
 def featurize_lstm_v3(agent_names, alive_agents, obs, total_gold):
     players = np.zeros((4, obs.mapInfo.height + 1, obs.mapInfo.width + 1), dtype=float)
-    obstacle_1 = np.zeros([obs.mapInfo.height + 1, obs.mapInfo.width + 1], dtype=float)
     obstacle_random = np.zeros([obs.mapInfo.height + 1, obs.mapInfo.width + 1], dtype=float)
+    obstacle_1 = np.zeros([obs.mapInfo.height + 1, obs.mapInfo.width + 1], dtype=float)
     obstacle_5 = np.zeros([obs.mapInfo.height + 1, obs.mapInfo.width + 1], dtype=float)
     obstacle_10 = np.zeros([obs.mapInfo.height + 1, obs.mapInfo.width + 1], dtype=float)
     obstacle_20 = np.zeros([obs.mapInfo.height + 1, obs.mapInfo.width + 1], dtype=float)
     obstacle_40 = np.zeros([obs.mapInfo.height + 1, obs.mapInfo.width + 1], dtype=float)
     obstacle_100 = np.zeros([obs.mapInfo.height + 1, obs.mapInfo.width + 1], dtype=float)
-    obstacle_value_min = np.zeros([obs.mapInfo.height + 1, obs.mapInfo.width + 1], dtype=float)
-    obstacle_value_max = np.zeros([obs.mapInfo.height + 1, obs.mapInfo.width + 1], dtype=float)
 
     gold = np.zeros([obs.mapInfo.height + 1, obs.mapInfo.width + 1], dtype=float)
     gold_amount = np.zeros([obs.mapInfo.height + 1, obs.mapInfo.width + 1], dtype=float)
@@ -289,9 +287,6 @@ def featurize_lstm_v3(agent_names, alive_agents, obs, total_gold):
                 gold[i, j] = 1
                 value = -4
 
-            obstacle_value_min[i, j] = (-value if value != 0 else 5) / constants.MAX_ENERGY
-            obstacle_value_max[i, j] = (-value if value != 0 else 20) / constants.MAX_ENERGY
-
             gold_amount[i, j] = obs.mapInfo.gold_amount(j, i) / 2000
 
     for i in range(4):
@@ -306,8 +301,6 @@ def featurize_lstm_v3(agent_names, alive_agents, obs, total_gold):
         obstacle_20,
         obstacle_40,
         obstacle_100,
-        obstacle_value_min,
-        obstacle_value_max,
         gold,
         gold_amount
     ])
@@ -324,8 +317,6 @@ def featurize_lstm_v3(agent_names, alive_agents, obs, total_gold):
 
     for i, agent_name in enumerate(agent_names):
         if agent_name in alive_agents:
-            position = np.clip(np.array([obs.players[i]["posy"] / 8 * 2 - 1,
-                                         obs.players[i]["posx"] / 20 * 2 - 1]), -1, 1)
             tmp_energy = energy_of_agents.copy()
 
             del tmp_energy[i]
@@ -338,8 +329,7 @@ def featurize_lstm_v3(agent_names, alive_agents, obs, total_gold):
                             fill_value=max(0, obs.players[i]["energy"]) / (constants.MAX_ENERGY / 2))
                 ]),
                 "fc_features": np.concatenate([
-                    tmp_energy,
-                    position
+                    tmp_energy
                 ])
             }
 

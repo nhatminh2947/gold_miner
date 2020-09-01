@@ -21,7 +21,7 @@ class SixthModel(RecurrentNetwork, nn.Module):
                 padding=1,
                 stride=1
             ),
-            nn.ELU(),
+            nn.ReLU(),
             nn.Conv2d(
                 in_channels=64,
                 out_channels=64,
@@ -29,7 +29,7 @@ class SixthModel(RecurrentNetwork, nn.Module):
                 padding=1,
                 stride=1
             ),
-            nn.ELU(),
+            nn.ReLU(),
             nn.Conv2d(
                 in_channels=64,
                 out_channels=64,
@@ -37,7 +37,7 @@ class SixthModel(RecurrentNetwork, nn.Module):
                 padding=1,
                 stride=1
             ),
-            nn.ELU(),
+            nn.ReLU(),
             nn.Conv2d(
                 in_channels=64,
                 out_channels=64,
@@ -45,7 +45,7 @@ class SixthModel(RecurrentNetwork, nn.Module):
                 padding=1,
                 stride=1
             ),
-            nn.ELU(),
+            nn.ReLU(),
             nn.Conv2d(
                 in_channels=64,
                 out_channels=64,
@@ -53,7 +53,7 @@ class SixthModel(RecurrentNetwork, nn.Module):
                 padding=1,
                 stride=1
             ),
-            nn.ELU(),
+            nn.ReLU(),
             nn.Conv2d(
                 in_channels=64,
                 out_channels=64,
@@ -61,7 +61,7 @@ class SixthModel(RecurrentNetwork, nn.Module):
                 padding=1,
                 stride=1
             ),
-            nn.ELU(),
+            nn.ReLU(),
             nn.Conv2d(
                 in_channels=64,
                 out_channels=64,
@@ -69,7 +69,7 @@ class SixthModel(RecurrentNetwork, nn.Module):
                 padding=1,
                 stride=1
             ),
-            nn.ELU(),
+            nn.ReLU(),
             nn.Conv2d(
                 in_channels=64,
                 out_channels=64,
@@ -77,46 +77,46 @@ class SixthModel(RecurrentNetwork, nn.Module):
                 padding=1,
                 stride=1
             ),
-            nn.ELU(),
+            nn.ReLU(),
             nn.Conv2d(
                 in_channels=64,
                 out_channels=64,
                 kernel_size=3,
                 stride=1
             ),
-            nn.ELU(),
+            nn.ReLU(),
             nn.Conv2d(
                 in_channels=64,
                 out_channels=64,
                 kernel_size=3,
                 stride=1
             ),
-            nn.ELU(),
+            nn.ReLU(),
             nn.Conv2d(
                 in_channels=64,
                 out_channels=64,
                 kernel_size=3,
                 stride=1
             ),
-            nn.ELU(),
+            nn.ReLU(),
             nn.Conv2d(
                 in_channels=64,
                 out_channels=64,
                 kernel_size=3,
                 stride=1
             ),
-            nn.ELU(),
+            nn.ReLU(),
             nn.Flatten(),  # 1 * 13 * 64 = 832
             nn.Linear(832, 512),
-            nn.ELU(),
+            nn.ReLU(),
             nn.Linear(512, 256),
-            nn.ELU(),
+            nn.ReLU(),
             nn.Linear(256, 128),
-            nn.ELU(),
+            nn.ReLU(),
         )
 
         # last layer + one hot last action + last reward + energies + position (x, y)
-        self.lstm = nn.LSTM(128 + 6 + 1 + 3 + 2, 128, batch_first=True)
+        self.lstm = nn.LSTM(128 + 6 + 3, 128, batch_first=True)
 
         self.actor_layers = nn.Sequential(
             nn.Linear(128, 6)
@@ -144,11 +144,6 @@ class SixthModel(RecurrentNetwork, nn.Module):
         x = input_dict["obs"]["conv_features"]
         x = self.shared_layers(x)
 
-        if type(input_dict["prev_rewards"]) != torch.Tensor:
-            input_dict["prev_rewards"] = torch.tensor(input_dict["prev_rewards"], device=device)
-
-        last_reward = torch.reshape(input_dict["prev_rewards"], [-1, 1]).float()
-
         if type(input_dict["prev_actions"]) != torch.Tensor:
             prev_actions = np.array(input_dict["prev_actions"], dtype=np.int)
         else:
@@ -160,7 +155,7 @@ class SixthModel(RecurrentNetwork, nn.Module):
             axis=-1
         )
 
-        x = torch.cat((x, input_dict["obs"]["fc_features"], last_reward, one_hot_prev_actions.float().to(device)),
+        x = torch.cat((x, input_dict["obs"]["fc_features"], one_hot_prev_actions.float().to(device)),
                       dim=1)
 
         output, new_state = self.forward_rnn(
