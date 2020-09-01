@@ -311,7 +311,7 @@ def featurize_lstm_v3(agent_names, alive_agents, obs, total_gold):
     energy_of_agents = []
     for i, agent_name in enumerate(agent_names):
         if agent_name in alive_agents:
-            energy_of_agents.append(obs.players[i]["energy"] / (constants.MAX_ENERGY / 2))
+            energy_of_agents.append(max(0, obs.players[i]["energy"]) / (constants.MAX_ENERGY / 2))
         else:
             energy_of_agents.append(0)
 
