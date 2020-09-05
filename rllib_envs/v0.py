@@ -22,6 +22,10 @@ class RllibMinerEnv(MultiAgentEnv):
             "policy_1",
             "policy_2",
             "policy_3",
+            "policy_4",
+            "policy_5",
+            "policy_6",
+            "policy_7",
         ]
 
         self.prev_actions = [
@@ -238,7 +242,7 @@ class RllibMinerEnv(MultiAgentEnv):
         self.prev_raw_obs = copy.deepcopy(raw_obs)
         self.episode_len = 0
 
-        self.agent_names = list(np.random.permutation(self.policy_names))
+        self.agent_names = list(np.random.choice(self.policy_names, size=4, replace=False))
         for i in range(4):
             self.agent_names[i] = f"{self.agent_names[i]}_{i}"
 
