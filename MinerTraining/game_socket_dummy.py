@@ -4,8 +4,9 @@ import os
 from random import randrange
 
 import constants
-from . import PlayerInfo, UserMatch, ObstacleInfo, GoldInfo
 import utils
+from . import PlayerInfo, UserMatch, ObstacleInfo, GoldInfo
+
 
 class StepState:
     def __init__(self):
@@ -76,7 +77,7 @@ class GameSocket:
 
     def reset_map(self, id):  # load map info
         self.mapId = id
-        self.maps["map0_0"] = utils.generate_map()
+        self.maps[self.mapId] = utils.random_gold(json.loads(self.maps[self.mapId]))
         self.map = json.loads(self.maps[self.mapId])
         self.userMatch = self.map_info(self.map)
         self.stepState.golds = self.userMatch.gameinfo.golds

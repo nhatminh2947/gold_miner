@@ -122,8 +122,9 @@ class MinerEnv:
     #
     #     return featurized_obs
 
-    def get_state(self):
+    def get_state(self, last_3_actions):
         obs = self.state
+
         player_channel = np.zeros((4, obs.mapInfo.max_y + 1, obs.mapInfo.max_x + 1), dtype=float)
         obstacle_1 = np.zeros([obs.mapInfo.max_y + 1, obs.mapInfo.max_x + 1], dtype=float)
         obstacle_random = np.zeros([obs.mapInfo.max_y + 1, obs.mapInfo.max_x + 1], dtype=float)
@@ -205,6 +206,10 @@ class MinerEnv:
         position = np.clip(np.array([obs.y / 8 * 2 - 1,
                                      obs.x / 20 * 2 - 1]), -1, 1)
 
+        one_hot_last_3_actions = np.zeros((3, 6), dtype=np.float32)
+        one_hot_last_3_actions[np.arange(3), last_3_actions] = 1
+        one_hot_last_3_actions = one_hot_last_3_actions.reshape(-1)
+
         featurized_obs = {
             "obs": {
                 "conv_features": torch.unsqueeze(torch.tensor(np.concatenate([
@@ -213,7 +218,10 @@ class MinerEnv:
                     np.full((1, obs.mapInfo.max_y + 1, obs.mapInfo.max_x + 1),
                             fill_value=max(0, obs.energy / (constants.MAX_ENERGY / 2)))
                 ]), dtype=torch.float), 0),
-                "fc_features": torch.unsqueeze(torch.tensor(position, dtype=torch.float), 0)
+                "fc_features": torch.unsqueeze(torch.tensor(np.concatenate([
+                        position,
+                        one_hot_last_3_actions
+                    ]), dtype=torch.float), 0)
             }
         }
 

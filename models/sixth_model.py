@@ -13,7 +13,7 @@ class SixthModel(RecurrentNetwork, nn.Module):
         nn.Module.__init__(self)
         super().__init__(obs_space, action_space, num_outputs, model_config, name)
 
-        self.shared_layers = nn.Sequential(
+        self.shared_conv_layers = nn.Sequential(
             nn.Conv2d(
                 in_channels=in_channels,
                 out_channels=64,
@@ -21,7 +21,7 @@ class SixthModel(RecurrentNetwork, nn.Module):
                 padding=1,
                 stride=1
             ),
-            nn.ELU(),
+            nn.SELU(),
             nn.Conv2d(
                 in_channels=64,
                 out_channels=64,
@@ -29,7 +29,7 @@ class SixthModel(RecurrentNetwork, nn.Module):
                 padding=1,
                 stride=1
             ),
-            nn.ELU(),
+            nn.SELU(),
             nn.Conv2d(
                 in_channels=64,
                 out_channels=64,
@@ -37,7 +37,7 @@ class SixthModel(RecurrentNetwork, nn.Module):
                 padding=1,
                 stride=1
             ),
-            nn.ELU(),
+            nn.SELU(),
             nn.Conv2d(
                 in_channels=64,
                 out_channels=64,
@@ -45,78 +45,47 @@ class SixthModel(RecurrentNetwork, nn.Module):
                 padding=1,
                 stride=1
             ),
-            nn.ELU(),
-            nn.Conv2d(
-                in_channels=64,
-                out_channels=64,
-                kernel_size=3,
-                padding=1,
-                stride=1
-            ),
-            nn.ELU(),
-            nn.Conv2d(
-                in_channels=64,
-                out_channels=64,
-                kernel_size=3,
-                padding=1,
-                stride=1
-            ),
-            nn.ELU(),
-            nn.Conv2d(
-                in_channels=64,
-                out_channels=64,
-                kernel_size=3,
-                padding=1,
-                stride=1
-            ),
-            nn.ELU(),
-            nn.Conv2d(
-                in_channels=64,
-                out_channels=64,
-                kernel_size=3,
-                padding=1,
-                stride=1
-            ),
-            nn.ELU(),
+            nn.SELU(),
             nn.Conv2d(
                 in_channels=64,
                 out_channels=64,
                 kernel_size=3,
                 stride=1
             ),
-            nn.ELU(),
+            nn.SELU(),
             nn.Conv2d(
                 in_channels=64,
                 out_channels=64,
                 kernel_size=3,
                 stride=1
             ),
-            nn.ELU(),
+            nn.SELU(),
             nn.Conv2d(
                 in_channels=64,
                 out_channels=64,
                 kernel_size=3,
                 stride=1
             ),
-            nn.ELU(),
+            nn.SELU(),
             nn.Conv2d(
                 in_channels=64,
                 out_channels=64,
                 kernel_size=3,
                 stride=1
             ),
-            nn.ELU(),
-            nn.Flatten(),  # 1 * 13 * 64 = 832
-            nn.Linear(832, 512),
-            nn.ELU(),
-            nn.Linear(512, 256),
-            nn.ELU(),
-            nn.Linear(256, 128),
-            nn.ELU(),
+            nn.SELU(),
+            nn.Flatten()  # 1 * 13 * 64 = 832
         )
 
-        # last layer + one hot last action + last reward + energies + position (x, y)
-        self.lstm = nn.LSTM(128 + 6 + 1 + 3 + 2, 128, batch_first=True)
+        self.shared_fc_layers = nn.Sequential(
+            nn.Linear(832 + 6 + 3, 512),
+            nn.SELU(),
+            nn.Linear(512, 256),
+            nn.SELU(),
+            nn.Linear(256, 128)
+        )
+
+        self.lstm = nn.LSTM(128, 128, batch_first=True)
 
         self.actor_layers = nn.Sequential(
             nn.Linear(128, 6)
@@ -139,29 +108,10 @@ class SixthModel(RecurrentNetwork, nn.Module):
 
     @override(ModelV2)
     def forward(self, input_dict, state, seq_lens):
-        device = 'cuda' if torch.cuda.is_available() else 'cpu'
-
         x = input_dict["obs"]["conv_features"]
-        x = self.shared_layers(x)
-
-        if type(input_dict["prev_rewards"]) != torch.Tensor:
-            input_dict["prev_rewards"] = torch.tensor(input_dict["prev_rewards"], device=device)
-
-        last_reward = torch.reshape(input_dict["prev_rewards"], [-1, 1]).float()
-
-        if type(input_dict["prev_actions"]) != torch.Tensor:
-            prev_actions = np.array(input_dict["prev_actions"], dtype=np.int)
-        else:
-            prev_actions = np.array(input_dict["prev_actions"].cpu().numpy(), dtype=np.int)
-        prev_actions = np.expand_dims(prev_actions, 0)
-
-        one_hot_prev_actions = torch.cat(
-            [nn.functional.one_hot(torch.tensor(a), 6) for a in prev_actions],
-            axis=-1
-        )
-
-        x = torch.cat((x, input_dict["obs"]["fc_features"], last_reward, one_hot_prev_actions.float().to(device)),
-                      dim=1)
+        x = self.shared_conv_layers(x)
+        x = torch.cat((x, input_dict["obs"]["fc_features"]), dim=1)
+        x = self.shared_fc_layers(x)
 
         output, new_state = self.forward_rnn(
             add_time_dimension(x.float(), seq_lens, framework="torch"),

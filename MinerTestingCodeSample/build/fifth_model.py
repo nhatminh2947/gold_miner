@@ -6,7 +6,7 @@ class FifthModel(nn.Module):
     def __init__(self):
         nn.Module.__init__(self)
 
-        self.shared_layers = nn.Sequential(
+        self.shared_conv_layers = nn.Sequential(
             nn.Conv2d(
                 in_channels=16,
                 out_channels=64,
@@ -67,8 +67,11 @@ class FifthModel(nn.Module):
                 stride=1
             ),
             nn.ELU(),
-            nn.Flatten(),  # 1 * 13 * 64 = 832
-            nn.Linear(832, 512),
+            nn.Flatten()  # 1 * 13 * 64 = 832
+        )
+
+        self.shared_fc_layers = nn.Sequential(
+            nn.Linear(852, 512),
             nn.ELU(),
             nn.Linear(512, 256),
             nn.ELU(),
@@ -77,11 +80,11 @@ class FifthModel(nn.Module):
         )
 
         self.actor_layers = nn.Sequential(
-            nn.Linear(128 + 2, 6)
+            nn.Linear(128, 6)
         )
 
         self.critic_layers = nn.Sequential(
-            nn.Linear(128 + 2, 1)
+            nn.Linear(128, 1)
         )
 
         self._shared_layer_out = None
@@ -89,11 +92,11 @@ class FifthModel(nn.Module):
 
     def forward(self, input_dict, state, seq_lens):
         x = input_dict["obs"]["conv_features"]
-        x = self.shared_layers(x)
+        x = self.shared_conv_layers(x)
+        x = torch.cat((x, input_dict["obs"]["fc_features"]), dim=1)
 
-        self._shared_layer_out = torch.cat((x, input_dict["obs"]["fc_features"]), dim=1)
+        self._shared_layer_out = self.shared_fc_layers(x)
         logits = self.actor_layers(self._shared_layer_out)
-
         return logits, state
 
     def predict(self, input_dict):

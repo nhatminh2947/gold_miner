@@ -232,7 +232,6 @@ def featurize_v2(agent_names, alive_agents, obs, total_gold, prev_actions):
 
     featurized_obs = {}
 
-
     for i, agent_name in enumerate(agent_names):
         if agent_name in alive_agents:
             position = np.clip(np.array([obs.players[i]["posy"] / 8 * 2 - 1,
@@ -261,7 +260,7 @@ def featurize_v2(agent_names, alive_agents, obs, total_gold, prev_actions):
     return featurized_obs
 
 
-def featurize_lstm_v3(agent_names, alive_agents, obs, total_gold):
+def featurize_lstm_v3(agent_names, alive_agents, obs, total_gold, prev_actions):
     players = np.zeros((4, obs.mapInfo.height + 1, obs.mapInfo.width + 1), dtype=float)
     obstacle_1 = np.zeros([obs.mapInfo.height + 1, obs.mapInfo.width + 1], dtype=float)
     obstacle_random = np.zeros([obs.mapInfo.height + 1, obs.mapInfo.width + 1], dtype=float)
@@ -319,7 +318,6 @@ def featurize_lstm_v3(agent_names, alive_agents, obs, total_gold):
         gold,
         gold_amount
     ])
-    # board = np.concatenate([players, board])
 
     featurized_obs = {}
 
@@ -332,9 +330,9 @@ def featurize_lstm_v3(agent_names, alive_agents, obs, total_gold):
 
     for i, agent_name in enumerate(agent_names):
         if agent_name in alive_agents:
-            position = np.clip(np.array([obs.players[i]["posy"] / 8 * 2 - 1,
-                                         obs.players[i]["posx"] / 20 * 2 - 1]), -1, 1)
             tmp_energy = energy_of_agents.copy()
+            one_hot_last_action = np.zeros((6,), dtype=np.float32)
+            one_hot_last_action[prev_actions[2]] = 1
 
             del tmp_energy[i]
 
@@ -347,7 +345,7 @@ def featurize_lstm_v3(agent_names, alive_agents, obs, total_gold):
                 ]),
                 "fc_features": np.concatenate([
                     tmp_energy,
-                    position
+                    one_hot_last_action
                 ])
             }
 
@@ -423,6 +421,24 @@ def print_map(obs):
     print()
 
 
+def random_gold(map):
+    gold_prob = [0.14, 0.14, 0.0725, 0.0725, 0.0725, 0.0725, 0.0535, 0.0535, 0.0535, 0.0535,
+                 0.0275, 0.0275, 0.0275, 0.0275, 0.025, 0.025, 0.015, 0.015, 0.01125, 0.01125,
+                 0.00025, 0.00025, 0.00025, 0.00025, 0.00025, 0.00025, 0.00025, 0.00025, 0.00025, 0.00025,
+                 0.0001, 0.0001, 0.0001, 0.0001, 0.0001, 0.0001, 0.0001, 0.0001, 0.0001, 0.0001]
+
+    gold_value = [50, 100, 150, 200, 250, 300, 350, 400, 450, 500,
+                  550, 600, 650, 700, 750, 800, 850, 900, 950, 1000,
+                  1050, 1100, 1150, 1200, 1250, 1300, 1350, 1400, 1450, 1500,
+                  1550, 1600, 1650, 1700, 1750, 1800, 1850, 1900, 1950, 2000]
+
+    for i in range(9):
+        for j in range(21):
+            map[i][j] = map[i][j] if map[i][j] < 50 else int(np.random.choice(gold_value, p=gold_prob))
+
+    return json.dumps(map)
+
+
 def generate_map():
     gold_q = []
 
@@ -451,7 +467,7 @@ def generate_map():
     map = np.zeros((9, 21), dtype=int)
     n_obstacles = 9 * 21 - n_gold_spots
 
-    while n_gold_spots > 0:
+    while n_gold_spots > 0 and total_gold < 8000:
         i = np.random.randint(9)
         j = np.random.randint(21)
 

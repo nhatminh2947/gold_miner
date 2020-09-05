@@ -82,7 +82,7 @@ def initialize():
     register(env_config)
 
     # Policy setting
-    def gen_policy():
+    def gen_policy(gamma):
         config = {
             "model": {
                 "max_seq_len": params["max_seq_len"],
@@ -92,17 +92,14 @@ def initialize():
                 },
                 "no_final_linear": True,
             },
+            "gamma": gamma,
             "framework": "torch",
             "explore": params["explore"]
         }
         return PPOTorchPolicy, constants.OBS_SPACE, constants.ACT_SPACE, config
 
-    policies = {
-        "policy_0": gen_policy(),
-        "policy_1": gen_policy(),
-        "policy_2": gen_policy(),
-        "policy_3": gen_policy(),
-    }
+    gammas = [0.96, 0.975, 0.9875, 0.99, 0.992, 0.996, 0.998, 0.999]
+    policies = {f"policy_{i}": gen_policy(gamma) for i, gamma in enumerate(gammas)}
 
     policy_names = list(policies.keys())
 

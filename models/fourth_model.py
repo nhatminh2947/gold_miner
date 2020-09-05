@@ -103,7 +103,7 @@ class FourthModel(TorchModelV2, nn.Module):
 
         self._shared_layer_out = self.shared_fc_layers(x)
         logits = self.actor_layers(self._shared_layer_out)
-
+        print(logits)
         return logits, state
 
     def predict(self, input_dict):

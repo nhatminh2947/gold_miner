@@ -1,7 +1,7 @@
 from warnings import simplefilter
 
 simplefilter(action='ignore', category=FutureWarning)
-
+from collections import deque
 from MinerEnv import MinerEnv
 from fifth_model import FifthModel
 import sys
@@ -15,8 +15,9 @@ ACTION_GO_DOWN = 3
 ACTION_FREE = 4
 ACTION_CRAFT = 5
 
+id = 0
 HOST = "localhost"
-PORT = 1111
+PORT = 1110 + id
 if len(sys.argv) == 3:
     HOST = str(sys.argv[1])
     PORT = int(sys.argv[2])
@@ -41,12 +42,14 @@ try:
 
     # minerEnv.send_map_info(request)
     minerEnv.reset()
-    obs, raw_obs = minerEnv.get_state()  ##Getting an initial state
+    last_3_actions = deque([4, 4, 4], maxlen=3)
+    obs, raw_obs = minerEnv.get_state(last_3_actions)  ##Getting an initial state
+
     while not minerEnv.check_terminate():
         try:
             utils.print_map(raw_obs)
             votes = {i: 0 for i in range(6)}
-            best_model_act = models[2].predict(obs)
+            best_model_act = models[3].predict(obs)
             # votes[best_model_act] += 1
             for model in models:
                 votes[model.predict(obs)] += 1
@@ -61,11 +64,13 @@ try:
             if votes[best_model_act] == max_count:
                 choosen_move = best_model_act
 
-            action = choosen_move  # Getting an action from the trained model
+            action = best_model_act  # Getting an action from the trained model
             print("next action = ", action)
             minerEnv.step(str(action))  # Performing the action in order to obtain the new state
-            s_next, raw_obs = minerEnv.get_state()  # Getting a new state
+            last_3_actions.append(best_model_act)
+            s_next, raw_obs = minerEnv.get_state(last_3_actions)  # Getting a new state
             obs = s_next
+
         except Exception as e:
             import traceback
 
