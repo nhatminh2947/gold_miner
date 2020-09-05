@@ -57,6 +57,11 @@ class RllibMinerEnv(MultiAgentEnv):
                 actions.append(action_dict[self.agent_names[i]])
                 self.stat[i][Metrics(actions[-1]).name] += 1
                 self.prev_actions[i].append(action_dict[self.agent_names[i]])
+
+                if self.prev_actions[i] == [4, 4, 4]:
+                    self.stat[i][Metrics.TRIPLE_FREE.name] += 1
+                elif self.prev_actions[i][1] == 4 and self.prev_actions[i][2] == 4:
+                    self.stat[i][Metrics.DOUBLE_FREE.name] += 1
             else:
                 actions.append(Action.ACTION_FREE.value)
 
@@ -183,13 +188,13 @@ class RllibMinerEnv(MultiAgentEnv):
                         win_loss[agent_name] = 0
                     elif players[i]["score"] == max_score:
                         if players[i]["energy"] >= max_energy:
-                            rewards[agent_name] = 1
+                            # rewards[agent_name] = 1
                             win_loss[agent_name] = 1
                         else:
-                            rewards[agent_name] = -1
+                            # rewards[agent_name] = -1
                             win_loss[agent_name] = 0
                     else:
-                        rewards[agent_name] = -1
+                        # rewards[agent_name] = -1
                         win_loss[agent_name] = 0
 
                 elif players[i]["status"] in [constants.Status.STATUS_ELIMINATED_WENT_OUT_MAP.value,

@@ -12,3 +12,5 @@ class Metrics(Enum):
     INVALID_CRAFT = 7
     INVALID_FREE = 8
     FINDING_GOLD = 9
+    DOUBLE_FREE = 10
+    TRIPLE_FREE = 11
