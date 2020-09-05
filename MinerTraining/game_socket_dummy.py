@@ -77,7 +77,6 @@ class GameSocket:
 
     def reset_map(self, id):  # load map info
         self.mapId = id
-        self.maps[self.mapId] = utils.random_gold(json.loads(self.maps[self.mapId]))
         self.map = json.loads(self.maps[self.mapId])
         self.userMatch = self.map_info(self.map)
         self.stepState.golds = self.userMatch.gameinfo.golds
@@ -108,6 +107,7 @@ class GameSocket:
         userMatch.gameinfo.height = len(map)
         userMatch.gameinfo.width = len(map[0])
         i = 0
+        max_gold_num = 10000
         while i < len(map):
             j = 0
             while j < len(map[i]):
@@ -115,7 +115,8 @@ class GameSocket:
                     g = GoldInfo()
                     g.posx = j
                     g.posy = i
-                    g.amount = map[i][j]
+                    g.amount = (randrange(min(25, max(int(max_gold_num/50), 1))) + 1) * 50
+                    max_gold_num -= g.amount
                     userMatch.gameinfo.golds.append(g)
                 else:  # obstacles
                     o = ObstacleInfo()

@@ -72,7 +72,7 @@ class RllibMinerEnv(MultiAgentEnv):
         alive_agents = list(action_dict.keys())
         raw_obs = self.env.step(','.join([str(action) for action in actions]))
 
-        obs = utils.featurize_lstm_v3(self.agent_names, alive_agents, raw_obs, self.total_gold, self.prev_actions)
+        obs = utils.featurize_v2(self.agent_names, alive_agents, raw_obs, self.total_gold, self.prev_actions)
         rewards, win_loss = self._rewards_v1(alive_agents, raw_obs.players, raw_obs)
 
         dones = {}
@@ -256,4 +256,4 @@ class RllibMinerEnv(MultiAgentEnv):
             self.stat.append({metric.name: 0 for metric in Metrics})
             self.stat[i][Metrics.ENERGY.name] = 50
 
-        return utils.featurize_lstm_v3(self.agent_names, self.agent_names, raw_obs, self.total_gold, self.prev_actions)
+        return utils.featurize_v2(self.agent_names, self.agent_names, raw_obs, self.total_gold, self.prev_actions)

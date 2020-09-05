@@ -27,7 +27,7 @@ class MinerEnv:
 
     def reset(self):  # start new game
         try:
-            mapID = np.random.randint(1, 14)
+            mapID = np.random.randint(0, 14)
             # version = np.random.randint(0, 4)
             # mapID = 0
             # version = 0
