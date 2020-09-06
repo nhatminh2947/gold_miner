@@ -209,7 +209,7 @@ def featurize_v2(agent_names, alive_agents, obs, total_gold, prev_actions):
             obstacle_value_min[i, j] = (-value if value != 0 else 5) / constants.MAX_ENERGY
             obstacle_value_max[i, j] = (-value if value != 0 else 20) / constants.MAX_ENERGY
 
-            gold_amount[i, j] = obs.mapInfo.gold_amount(j, i) / 2000
+            gold_amount[i, j] = obs.mapInfo.gold_amount(j, i) / 1250
 
     for i in range(4):
         if obs.players[i]["status"] == constants.Status.STATUS_PLAYING.value:
@@ -420,45 +420,14 @@ def print_map(obs):
         print()
     print()
 
-
-def random_gold(map):
-    gold_prob = [0.14, 0.14, 0.0725, 0.0725, 0.0725, 0.0725, 0.0535, 0.0535, 0.0535, 0.0535,
-                 0.0275, 0.0275, 0.0275, 0.0275, 0.025, 0.025, 0.015, 0.015, 0.01125, 0.01125,
-                 0.00025, 0.00025, 0.00025, 0.00025, 0.00025, 0.00025, 0.00025, 0.00025, 0.00025, 0.00025,
-                 0.0001, 0.0001, 0.0001, 0.0001, 0.0001, 0.0001, 0.0001, 0.0001, 0.0001, 0.0001]
-
-    gold_value = [50, 100, 150, 200, 250, 300, 350, 400, 450, 500,
-                  550, 600, 650, 700, 750, 800, 850, 900, 950, 1000,
-                  1050, 1100, 1150, 1200, 1250, 1300, 1350, 1400, 1450, 1500,
-                  1550, 1600, 1650, 1700, 1750, 1800, 1850, 1900, 1950, 2000]
-
-    for i in range(9):
-        for j in range(21):
-            map[i][j] = map[i][j] if map[i][j] < 50 else int(np.random.choice(gold_value, p=gold_prob))
-
-    return json.dumps(map)
-
-
 def generate_map():
     gold_q = []
 
-    gold_next_to_prob = 0.20 / 8
-    gold_value = [0,
-                  50, 100, 150, 200, 250, 300, 350, 400, 450, 500,
-                  550, 600, 650, 700, 750, 800, 850, 900, 950, 1000,
-                  1050, 1100, 1150, 1200, 1250, 1300, 1350, 1400, 1450, 1500,
-                  1550, 1600, 1650, 1700, 1750, 1800, 1850, 1900, 1950, 2000]
-
-    gold_prob = [0.08,
-                 0.1, 0.1, 0.0725, 0.0725, 0.0725, 0.0725, 0.0535, 0.0535, 0.0535, 0.0535,
-                 0.0275, 0.0275, 0.0275, 0.0275, 0.025, 0.025, 0.015, 0.015, 0.01125, 0.01125,
-                 0.00025, 0.00025, 0.00025, 0.00025, 0.00025, 0.00025, 0.00025, 0.00025, 0.00025, 0.00025,
-                 0.0001, 0.0001, 0.0001, 0.0001, 0.0001, 0.0001, 0.0001, 0.0001, 0.0001, 0.0001]
     # print(sum(gold_prob))
     total_gold = 0
     # dx = [-1, 0, 0, 1]
     # dy = [0, -1, 1, 0]
-    n_gold_spots = np.random.randint(17, 25)
+    n_gold_spots = np.random.randint(10, 25)
     # n_digging_times = np.random.randint(100, 150) - n_gold_spots
 
     dx = [-1, -1, -1, 0, 0, 1, 1, 1]
@@ -476,7 +445,7 @@ def generate_map():
             j = np.random.randint(21)
         gold_q.append((i, j))
 
-        map[i, j] = np.random.choice(gold_value, p=gold_prob)
+        map[i, j] = 50
         total_gold += map[i, j]
         n_gold_spots -= 1
 
@@ -484,8 +453,8 @@ def generate_map():
             ii = i + ix
             jj = j + iy
 
-            if 0 <= ii < 9 and 0 <= jj < 21 and np.random.random() < gold_next_to_prob:
-                map[ii, jj] = np.random.choice(gold_value, p=gold_prob)
+            if 0 <= ii < 9 and 0 <= jj < 21 and np.random.random() < 0.025:
+                map[ii, jj] = 50
                 total_gold += map[ii, jj]
                 n_gold_spots -= 1
                 gold_q.append((ii, jj))
@@ -501,11 +470,11 @@ def generate_map():
                     map[xx, yy] = -obstacle_type
                     n_obstacles -= 1
 
+    obstacle_prob = np.random.uniform(0, 0.6)
     for i in range(9):
         for j in range(21):
-            if map[i, j] == 0 and np.random.random() < 0.55:
+            if map[i, j] == 0 and np.random.random() < obstacle_prob:
                 map[i, j] = -np.random.randint(1, 4)
-    print(total_gold)
 
     return json.dumps(map.tolist())
 
