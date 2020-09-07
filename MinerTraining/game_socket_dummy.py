@@ -3,8 +3,6 @@ import math
 import os
 from random import randrange
 
-import numpy as np
-
 import constants
 import utils
 from . import PlayerInfo, UserMatch, ObstacleInfo, GoldInfo
@@ -78,8 +76,7 @@ class GameSocket:
         self.stepCount = 0
 
     def reset_map(self, id):  # load map info
-        self.mapId = id if np.random.uniform() < 0.5 else "generate"
-
+        self.mapId = "generate"
         self.maps["generate"] = utils.generate_map()
         self.map = json.loads(self.maps[self.mapId])
         self.userMatch = self.map_info(self.map)
@@ -119,8 +116,7 @@ class GameSocket:
                     g = GoldInfo()
                     g.posx = j
                     g.posy = i
-                    g.amount = (randrange(min(25, max(int(max_gold_num / 50), 1))) + 1) * 50
-                    max_gold_num -= g.amount
+                    g.amount = map[i][j]
                     userMatch.gameinfo.golds.append(g)
                 else:  # obstacles
                     o = ObstacleInfo()

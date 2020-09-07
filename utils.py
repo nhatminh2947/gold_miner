@@ -420,6 +420,7 @@ def print_map(obs):
         print()
     print()
 
+
 def generate_map():
     gold_q = []
 
@@ -435,8 +436,9 @@ def generate_map():
 
     map = np.zeros((9, 21), dtype=int)
     n_obstacles = 9 * 21 - n_gold_spots
+    max_gold = 10000
 
-    while n_gold_spots > 0 and total_gold < 8000:
+    while n_gold_spots > 0:
         i = np.random.randint(9)
         j = np.random.randint(21)
 
@@ -445,7 +447,7 @@ def generate_map():
             j = np.random.randint(21)
         gold_q.append((i, j))
 
-        map[i, j] = 50
+        map[i, j] = (np.random.randint(min(25, max(max_gold // 50, 1))) + 1) * 50
         total_gold += map[i, j]
         n_gold_spots -= 1
 
@@ -460,13 +462,15 @@ def generate_map():
                 gold_q.append((ii, jj))
 
         obstacle_type = np.random.randint(1, 4)
+        obstacle_prob = np.random.uniform(0.2, 0.75)
+
         while len(gold_q) != 0:
             x, y = gold_q.pop(0)
             for ix, iy in zip(dx, dy):
                 xx = x + ix
                 yy = y + iy
 
-                if inside_map(xx, yy) and map[xx, yy] == 0 and np.random.random() < 0.75:
+                if inside_map(xx, yy) and map[xx, yy] == 0 and np.random.random() < obstacle_prob:
                     map[xx, yy] = -obstacle_type
                     n_obstacles -= 1
 
