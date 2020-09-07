@@ -449,6 +449,7 @@ def generate_map():
 
         map[i, j] = (np.random.randint(min(25, max(max_gold // 50, 1))) + 1) * 50
         total_gold += map[i, j]
+        max_gold -= map[i, j]
         n_gold_spots -= 1
 
         for ix, iy in zip(dx, dy):
@@ -458,6 +459,7 @@ def generate_map():
             if 0 <= ii < 9 and 0 <= jj < 21 and np.random.random() < 0.025:
                 map[ii, jj] = 50
                 total_gold += map[ii, jj]
+                max_gold -= map[i, j]
                 n_gold_spots -= 1
                 gold_q.append((ii, jj))
 
