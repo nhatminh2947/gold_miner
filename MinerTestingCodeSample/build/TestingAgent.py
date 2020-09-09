@@ -22,7 +22,8 @@ if len(sys.argv) == 3:
     HOST = str(sys.argv[1])
     PORT = int(sys.argv[2])
 
-models = [FifthModel(), FifthModel(), FifthModel(), FifthModel()]
+models = [FifthModel(), FifthModel(), FifthModel(), FifthModel(),
+          FifthModel(), FifthModel(), FifthModel(), FifthModel()]
 for i, model in enumerate(models):
     model.load_state_dict(torch.load(f"./TrainedModels/model_{i}.pt"))
     model.to('cpu')
@@ -49,7 +50,7 @@ try:
         try:
             utils.print_map(raw_obs)
             votes = {i: 0 for i in range(6)}
-            best_model_act = models[2].predict(obs)
+            best_model_act = models[7].predict(obs)
             # votes[best_model_act] += 1
             for model in models:
                 votes[model.predict(obs)] += 1

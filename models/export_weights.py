@@ -24,13 +24,13 @@ ppo_agent = PPOTrainer(config={
     "framework": "torch"
 }, env="MinerEnv-v0")
 
-id = 2300
-checkpoint_dir = "/home/lucius/ray_results/gold_miner/PPO_MinerEnv-v0_0_2020-09-02_13-54-42y2g0iolu"
+id = 950
+checkpoint_dir = "/home/lucius/ray_results/gold_miner_2/PPO_MinerEnv-v0_0_2020-09-09_00-27-16vw8sgq8m"
 checkpoint = "{}/checkpoint_{}/checkpoint-{}".format(checkpoint_dir, id, id)
 
 ppo_agent.restore(checkpoint)
 
-for i in range(4):
+for i in range(8):
     mem_size = 0
     weights = ppo_agent.get_policy(f"policy_{i}").get_weights()
     for key in weights:

@@ -58,7 +58,7 @@ class RllibMinerEnv(MultiAgentEnv):
                 self.stat[i][Metrics(actions[-1]).name] += 1
                 self.prev_actions[i].append(action_dict[self.agent_names[i]])
 
-                if self.prev_actions[i] == [4, 4, 4]:
+                if list(self.prev_actions[i]) == [4, 4, 4]:
                     self.stat[i][Metrics.TRIPLE_FREE.name] += 1
                 elif self.prev_actions[i][1] == 4 and self.prev_actions[i][2] == 4:
                     self.stat[i][Metrics.DOUBLE_FREE.name] += 1
@@ -179,7 +179,7 @@ class RllibMinerEnv(MultiAgentEnv):
         for i, agent_name in enumerate(self.agent_names):
             if agent_name in alive_agents:
                 rewards[agent_name] = (players[i]["score"] - self.prev_score[i]) / 50 * 0.02
-                # rewards[agent_name] = (players[i]["energy"] - self.prev_energy[i]) * 0.0001
+                rewards[agent_name] = (players[i]["energy"] - self.prev_energy[i]) * 0.0001
 
                 if players[i]["status"] in [constants.Status.STATUS_STOP_END_STEP.value,
                                             constants.Status.STATUS_STOP_EMPTY_GOLD.value]:
