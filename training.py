@@ -9,7 +9,7 @@ from ray.rllib.env import BaseEnv
 from ray.rllib.evaluation import MultiAgentEpisode, RolloutWorker
 from ray.rllib.models import ModelCatalog
 from ray.rllib.policy import Policy
-
+from exploration_annealing import ExplorationAnnealing
 import arguments
 import constants
 from MinerTraining import Metrics
@@ -48,15 +48,9 @@ class MinerCallbacks(DefaultCallbacks):
                            constants.Status.STATUS_STOP_EMPTY_GOLD]:
                 episode.custom_metrics[f"{policy}/{status.name}"] = int(status.name == info["status"].name)
 
-    # def on_train_result(self, trainer, result: dict, **kwargs):
-    #     if result["custom_metrics"]:
-    #         if result["timesteps_total"] - self.pbt.last_update >= self.pbt.ready:
-    #             self.pbt.run(trainer, result)
-    #             self.pbt.last_update = result["timesteps_total"]
-    #
-    #         for i in range(4):
-    #             result["custom_metrics"][f"policy_{i}/clip_param"] \
-    #                 = trainer.get_policy(f"policy_{i}").config["clip_param"]
+    def on_train_result(self, trainer, result: dict, **kwargs):
+        annealing = ray.get_actor("annealing")
+        annealing.update_alpha.remote(result["timesteps_total"])
 
 
 def register(env_config):
@@ -103,6 +97,8 @@ def initialize():
     policies = {f"policy_{i}": gen_policy(gamma) for i, gamma in enumerate(gammas)}
 
     policy_names = list(policies.keys())
+
+    ExplorationAnnealing.options(name="annealing").remote()
 
     print("Training policies:", policies.keys())
 

@@ -3,6 +3,8 @@ import math
 import os
 from random import randrange
 
+import numpy as np
+
 import constants
 import utils
 from . import PlayerInfo, UserMatch, ObstacleInfo, GoldInfo
@@ -76,8 +78,9 @@ class GameSocket:
         self.stepCount = 0
 
     def reset_map(self, id):  # load map info
-        self.mapId = "generate"
-        self.maps["generate"] = utils.generate_map()
+        self.mapId = "generate" if np.random.uniform() < 0.1 else id
+        if self.mapId == "generate":
+            self.maps["generate"] = utils.generate_map()
         self.map = json.loads(self.maps[self.mapId])
         self.userMatch = self.map_info(self.map)
         self.stepState.golds = self.userMatch.gameinfo.golds

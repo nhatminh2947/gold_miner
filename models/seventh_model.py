@@ -19,7 +19,7 @@ class SeventhModel(TorchModelV2, nn.Module):
                 padding=1,
                 stride=1
             ),
-            nn.SELU(),
+            nn.ELU(),
             nn.Conv2d(
                 in_channels=64,
                 out_channels=64,
@@ -27,7 +27,7 @@ class SeventhModel(TorchModelV2, nn.Module):
                 padding=1,
                 stride=1
             ),
-            nn.SELU(),
+            nn.ELU(),
             nn.Conv2d(
                 in_channels=64,
                 out_channels=64,
@@ -35,7 +35,7 @@ class SeventhModel(TorchModelV2, nn.Module):
                 padding=1,
                 stride=1
             ),
-            nn.SELU(),
+            nn.ELU(),
             nn.Conv2d(
                 in_channels=64,
                 out_channels=64,
@@ -43,45 +43,45 @@ class SeventhModel(TorchModelV2, nn.Module):
                 padding=1,
                 stride=1
             ),
-            nn.SELU(),
+            nn.ELU(),
             nn.Conv2d(
                 in_channels=64,
                 out_channels=64,
                 kernel_size=3,
                 stride=1
             ),
-            nn.SELU(),
+            nn.ELU(),
             nn.Conv2d(
                 in_channels=64,
                 out_channels=64,
                 kernel_size=3,
                 stride=1
             ),
-            nn.SELU(),
+            nn.ELU(),
             nn.Conv2d(
                 in_channels=64,
                 out_channels=64,
                 kernel_size=3,
                 stride=1
             ),
-            nn.SELU(),
+            nn.ELU(),
             nn.Conv2d(
                 in_channels=64,
                 out_channels=64,
                 kernel_size=3,
                 stride=1
             ),
-            nn.SELU(),
+            nn.ELU(),
             nn.Flatten()  # 1 * 13 * 64 = 832
         )
 
         self.shared_fc_layers = nn.Sequential(
             nn.Linear(860, 512),
-            nn.SELU(),
+            nn.ELU(),
             nn.Linear(512, 256),
-            nn.SELU(),
+            nn.ELU(),
             nn.Linear(256, 128),
-            nn.SELU(),
+            nn.ELU(),
         )
 
         self.actor_layers = nn.Sequential(
