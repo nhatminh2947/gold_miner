@@ -73,7 +73,7 @@ class RllibMinerEnv(MultiAgentEnv):
         raw_obs = self.env.step(','.join([str(action) for action in actions]))
 
         obs = utils.featurize_v2(self.agent_names, alive_agents, raw_obs, self.total_gold, self.prev_actions)
-        rewards, win_loss = self._rewards_v1(alive_agents, raw_obs.players, raw_obs)
+        rewards, win_loss = self._rewards_v2(alive_agents, raw_obs.players, raw_obs)
 
         dones = {}
         infos = {}
@@ -227,6 +227,72 @@ class RllibMinerEnv(MultiAgentEnv):
                 self.prev_energy[i] = players[i]["energy"]
 
         return rewards, win_loss
+
+    def _rewards_v2(self, alive_agents, players, raw_obs):
+        rewards = {}
+        win_loss = {}
+
+        ranking_rewards, ranks = self.ranking_reward(players)
+
+        for i, agent_name in enumerate(self.agent_names):
+            if agent_name in alive_agents:
+                rewards[agent_name] = 0
+                # rewards[agent_name] = (players[i]["score"] - self.prev_score[i]) / 50 * 0.02
+                # rewards[agent_name] = (players[i]["energy"] - self.prev_energy[i]) * 0.0001
+
+                if players[i]["status"] in [constants.Status.STATUS_STOP_END_STEP.value,
+                                            constants.Status.STATUS_STOP_EMPTY_GOLD.value]:
+                    if players[i]["score"] == 0:
+                        rewards[agent_name] = -1
+                        win_loss[agent_name] = 0
+                    else:
+                        rewards[agent_name] = ranking_rewards[i]
+                        win_loss[agent_name] = 1 if ranks[0] == i else 0
+
+                elif players[i]["status"] in [constants.Status.STATUS_ELIMINATED_WENT_OUT_MAP.value,
+                                              constants.Status.STATUS_ELIMINATED_OUT_OF_ENERGY.value]:
+                    rewards[agent_name] = -1
+                    win_loss[agent_name] = 0
+
+                if players[i]["lastAction"] == constants.Action.ACTION_CRAFT.value \
+                        and self.prev_raw_obs.mapInfo.gold_amount(players[i]["posx"], players[i]["posy"]) == 0:
+                    # rewards[agent_name] -= 0.05
+                    self.stat[i][Metrics.INVALID_CRAFT.name] += 1
+                # elif players[i]["lastAction"] in [constants.Action.ACTION_GO_UP.value,
+                #                                   constants.Action.ACTION_GO_DOWN.value,
+                #                                   constants.Action.ACTION_GO_LEFT.value,
+                #                                   constants.Action.ACTION_GO_RIGHT.value] \
+                #         and raw_obs.mapInfo.gold_amount(players[i]["posx"], players[i]["posy"]):
+                #     rewards[agent_name] += 0.001
+                elif players[i]["lastAction"] == constants.Action.ACTION_FREE.value \
+                        and self.prev_raw_obs.players[i]["energy"] > 40:
+                    # rewards[agent_name] -= 0.02
+                    self.stat[i][Metrics.INVALID_FREE.name] += 1
+
+                if raw_obs.mapInfo.gold_amount(players[i]["posx"], players[i]["posy"]) == 0:
+                    if not (players[i]["lastAction"] and self.prev_raw_obs.mapInfo.gold_amount(players[i]["posx"],
+                                                                                               players[i]["posy"])):
+                        # rewards[agent_name] -= 0.001
+                        self.stat[i][Metrics.FINDING_GOLD.name] += 1
+
+                self.prev_score[i] = players[i]["score"]
+                self.prev_energy[i] = players[i]["energy"]
+
+        return rewards, win_loss
+
+    def ranking_reward(self, players):
+        data = [(i, players[i]['score'], players[i]['energy']) for i in range(4)]
+        ranking = sorted(data, key=lambda x: (x[1], x[2]), reverse=True)
+        rewards = [1, 0.5, -0.5, -1]
+        ranking_reward = [0, 0, 0, 0]
+
+        for id, data in enumerate(ranking):
+            if id != 0 and data[1] == ranking[id - 1][1] and data[2] == ranking[id - 1][2]:
+                ranking_reward[data[0]] = ranking_reward[ranking[id - 1][0]]
+            else:
+                ranking_reward[data[0]] = rewards[id]
+
+        return ranking_reward, [data[0] for data in ranking]
 
     def reset(self):
         raw_obs = self.env.reset()
