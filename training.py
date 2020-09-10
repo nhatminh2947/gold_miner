@@ -14,7 +14,7 @@ import arguments
 import constants
 from MinerTraining import Metrics
 from MinerTraining import PopulationBasedTraining
-from models import TorchRNNModel, SecondModel, ThirdModel, FourthModel, FifthModel, SixthModel
+from models import TorchRNNModel, SecondModel, ThirdModel, FourthModel, FifthModel, SixthModel, SeventhModel
 from rllib_envs import v0
 from utils import policy_mapping
 
@@ -66,6 +66,7 @@ def register(env_config):
     ModelCatalog.register_custom_model("4th_model", FourthModel)
     ModelCatalog.register_custom_model("5th_model", FifthModel)
     ModelCatalog.register_custom_model("6th_model", SixthModel)
+    ModelCatalog.register_custom_model("7th_model", SeventhModel)
 
     tune.register_env("MinerEnv-v0", lambda x: v0.RllibMinerEnv(env_config))
 

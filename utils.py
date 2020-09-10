@@ -211,9 +211,13 @@ def featurize_v2(agent_names, alive_agents, obs, total_gold, prev_actions):
 
             gold_amount[i, j] = obs.mapInfo.gold_amount(j, i) / 1250
 
+    scores = [0, 0, 0, 0]
     for i in range(4):
         if obs.players[i]["status"] == constants.Status.STATUS_PLAYING.value:
             players[i][obs.players[i]["posy"], obs.players[i]["posx"]] = 1
+            scores[i] = obs.players[i]["score"] / 50 * 0.02
+        else:
+            scores[i] = -1
 
     board = np.stack([
         obstacle_random,
@@ -250,12 +254,14 @@ def featurize_v2(agent_names, alive_agents, obs, total_gold, prev_actions):
                 ]),
                 "fc_features": np.concatenate([
                     position,
-                    one_hot_last_3_actions
+                    one_hot_last_3_actions,
+                    scores
                 ])
             }
 
         if i + 1 < 4:
             players[[0, i + 1]] = players[[i + 1, 0]]
+            scores[0], scores[i + 1] = scores[i + 1], scores[0]
 
     return featurized_obs
 
