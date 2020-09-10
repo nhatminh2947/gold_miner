@@ -76,7 +76,7 @@ class SeventhModel(TorchModelV2, nn.Module):
         )
 
         self.shared_fc_layers = nn.Sequential(
-            nn.Linear(856, 512),
+            nn.Linear(860, 512),
             nn.SELU(),
             nn.Linear(512, 256),
             nn.SELU(),
