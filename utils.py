@@ -431,6 +431,15 @@ def print_map(obs):
     print()
 
 
+def random_gold(map):
+    m = json.loads(map)
+    for i in range(9):
+        for j in range(21):
+            m[i][j] = m[i][j] if m[i][j] < 50 else int(np.random.choice(constants.GOLD_VALUE, p=constants.GOLD_PROB))
+
+    return json.dumps(m)
+
+
 def generate_map():
     gold_q = []
 
@@ -438,17 +447,14 @@ def generate_map():
     total_gold = 0
     # dx = [-1, 0, 0, 1]
     # dy = [0, -1, 1, 0]
-    n_gold_spots = np.random.randint(10, 25)
-    # n_digging_times = np.random.randint(100, 150) - n_gold_spots
+    gold_next_to_prob = 0.20 / 8
 
     dx = [-1, -1, -1, 0, 0, 1, 1, 1]
     dy = [-1, 0, 1, -1, 1, -1, 0, 1]
 
     map = np.zeros((9, 21), dtype=int)
-    n_obstacles = 9 * 21 - n_gold_spots
-    max_gold = 10000
 
-    while n_gold_spots > 0:
+    while total_gold < 8000:
         i = np.random.randint(9)
         j = np.random.randint(21)
 
@@ -457,20 +463,16 @@ def generate_map():
             j = np.random.randint(21)
         gold_q.append((i, j))
 
-        map[i, j] = (np.random.randint(min(25, max(max_gold // 50, 1))) + 1) * 50
+        map[i, j] = int(np.random.choice(constants.GOLD_VALUE, p=constants.GOLD_PROB))
         total_gold += map[i, j]
-        max_gold -= map[i, j]
-        n_gold_spots -= 1
 
         for ix, iy in zip(dx, dy):
             ii = i + ix
             jj = j + iy
 
-            if 0 <= ii < 9 and 0 <= jj < 21 and np.random.random() < 0.025:
-                map[ii, jj] = 50
+            if 0 <= ii < 9 and 0 <= jj < 21 and np.random.random() < gold_next_to_prob:
+                map[ii, jj] = int(np.random.choice(constants.GOLD_VALUE, p=constants.GOLD_PROB))
                 total_gold += map[ii, jj]
-                max_gold -= map[i, j]
-                n_gold_spots -= 1
                 gold_q.append((ii, jj))
 
         obstacle_type = np.random.randint(1, 4)
@@ -484,9 +486,8 @@ def generate_map():
 
                 if inside_map(xx, yy) and map[xx, yy] == 0 and np.random.random() < obstacle_prob:
                     map[xx, yy] = -obstacle_type
-                    n_obstacles -= 1
 
-    obstacle_prob = np.random.uniform(0, 0.6)
+    obstacle_prob = np.random.uniform(0.1, 0.6)
     for i in range(9):
         for j in range(21):
             if map[i, j] == 0 and np.random.random() < obstacle_prob:

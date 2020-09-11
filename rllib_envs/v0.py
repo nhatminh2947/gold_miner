@@ -238,7 +238,6 @@ class RllibMinerEnv(MultiAgentEnv):
         ranking_rewards, ranks = self.ranking_reward(players)
 
         annealing = ray.get_actor("annealing")
-        alpha = ray.get(annealing.get_alpha.remote())
 
         for i, agent_name in enumerate(self.agent_names):
             if agent_name in alive_agents:
@@ -283,6 +282,7 @@ class RllibMinerEnv(MultiAgentEnv):
 
                 self.prev_score[i] = players[i]["score"]
                 self.prev_energy[i] = players[i]["energy"]
+                alpha = ray.get(annealing.get_alpha.remote(agent_name[:-2]))
 
                 rewards[agent_name] = alpha * exploration_rewards[agent_name] + (1 - alpha) * game_rewards[agent_name]
 

@@ -9,11 +9,11 @@ from ray.rllib.env import BaseEnv
 from ray.rllib.evaluation import MultiAgentEpisode, RolloutWorker
 from ray.rllib.models import ModelCatalog
 from ray.rllib.policy import Policy
-from exploration_annealing import ExplorationAnnealing
+
 import arguments
 import constants
 from MinerTraining import Metrics
-from MinerTraining import PopulationBasedTraining
+from exploration_annealing import ExplorationAnnealing
 from models import TorchRNNModel, SecondModel, ThirdModel, FourthModel, FifthModel, SixthModel, SeventhModel
 from rllib_envs import v0
 from utils import policy_mapping
@@ -27,7 +27,7 @@ class MinerCallbacks(DefaultCallbacks):
     def __init__(self):
         super().__init__()
 
-        self.pbt = PopulationBasedTraining(ready=params["ready"])
+        self.training_policies = [f"policy_{i}" for i in range(8)]
 
     def on_episode_end(self, worker: RolloutWorker, base_env: BaseEnv,
                        policies: Dict[str, Policy],
@@ -50,7 +50,11 @@ class MinerCallbacks(DefaultCallbacks):
 
     def on_train_result(self, trainer, result: dict, **kwargs):
         annealing = ray.get_actor("annealing")
-        annealing.update_alpha.remote(result["timesteps_total"])
+        if result["custom_metrics"]:
+            for policy in self.training_policies:
+                alpha = ray.get(annealing.update_alpha.remote(policy,
+                                                              result["custom_metrics"][f"{policy}/gold_mean"]))
+                result["custom_metrics"][f"{policy}/alpha"] = alpha
 
 
 def register(env_config):
@@ -98,7 +102,7 @@ def initialize():
 
     policy_names = list(policies.keys())
 
-    ExplorationAnnealing.options(name="annealing").remote()
+    ExplorationAnnealing.options(name="annealing").remote(policy_names)
 
     print("Training policies:", policies.keys())
 

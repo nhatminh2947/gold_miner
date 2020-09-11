@@ -81,10 +81,13 @@ class GameSocket:
         self.mapId = "generate" if np.random.uniform() < 0.1 else id
         if self.mapId == "generate":
             self.maps["generate"] = utils.generate_map()
+        else:
+            self.maps[self.mapId] = utils.random_gold(self.maps[self.mapId])
+
         self.map = json.loads(self.maps[self.mapId])
         self.userMatch = self.map_info(self.map)
         self.stepState.golds = self.userMatch.gameinfo.golds
-        self.map = json.loads(self.maps[self.mapId])
+        # self.map = json.loads(self.maps[self.mapId])
         self.energyOnMap = json.loads(self.maps[self.mapId])
 
         for x in range(len(self.map)):
