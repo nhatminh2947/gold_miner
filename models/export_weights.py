@@ -24,8 +24,8 @@ ppo_agent = PPOTrainer(config={
     "framework": "torch"
 }, env="MinerEnv-v0")
 
-id = 950
-checkpoint_dir = "/home/lucius/ray_results/gold_miner_2/PPO_MinerEnv-v0_0_2020-09-09_00-27-16vw8sgq8m"
+id = 600
+checkpoint_dir = "/home/lucius/ray_results/gold_miner_2/PPO_MinerEnv-v0_0_2020-09-11_16-59-56ikv6tou7"
 checkpoint = "{}/checkpoint_{}/checkpoint-{}".format(checkpoint_dir, id, id)
 
 ppo_agent.restore(checkpoint)
@@ -45,6 +45,6 @@ for i in range(8):
     torch.save(weights,
                f"/home/lucius/working/projects/gold_miner/resources/TrainedModels/model_{i}.pt")
 
-    model = FourthModel(constants.OBS_SPACE, constants.ACT_SPACE, 6, {}, "model", constants.NUM_FEATURES)
-    model.load_state_dict(torch.load(f"/home/lucius/working/projects/gold_miner/resources/TrainedModels/model_{i}.pt"))
+    # model = FourthModel(constants.OBS_SPACE, constants.ACT_SPACE, 6, {}, "model", constants.NUM_FEATURES)
+    # model.load_state_dict(torch.load(f"/home/lucius/working/projects/gold_miner/resources/TrainedModels/model_{i}.pt"))
 

@@ -74,7 +74,7 @@ class RllibMinerEnv(MultiAgentEnv):
         raw_obs = self.env.step(','.join([str(action) for action in actions]))
 
         obs = utils.featurize_v2(self.agent_names, alive_agents, raw_obs, self.total_gold, self.prev_actions)
-        rewards, win_loss = self._rewards_v2(alive_agents, raw_obs.players, raw_obs)
+        rewards, win_loss = self._rewards_v3(alive_agents, raw_obs.players, raw_obs)
 
         dones = {}
         infos = {}
@@ -285,6 +285,64 @@ class RllibMinerEnv(MultiAgentEnv):
                 alpha = ray.get(annealing.get_alpha.remote(agent_name[:-2]))
 
                 rewards[agent_name] = alpha * exploration_rewards[agent_name] + (1 - alpha) * game_rewards[agent_name]
+
+        return rewards, win_loss
+
+    def _rewards_v3(self, alive_agents, players, raw_obs):
+        rewards = {}
+        energy_reward = {}
+        win_loss = {}
+
+        ranking_rewards, ranks = self.ranking_reward(players)
+        annealing = ray.get_actor("annealing")
+
+        for i, agent_name in enumerate(self.agent_names):
+            if agent_name in alive_agents:
+                rewards[agent_name] = (players[i]["score"] - self.prev_score[i]) / 50 * 0.02
+                energy_reward[agent_name] = (players[i]["energy"] - self.prev_energy[i]) * 0.0001
+
+                if players[i]["status"] in [constants.Status.STATUS_STOP_END_STEP.value,
+                                            constants.Status.STATUS_STOP_EMPTY_GOLD.value]:
+                    if players[i]["score"] == 0:
+                        rewards[agent_name] = -1
+                        win_loss[agent_name] = 0
+                    else:
+                        # game_rewards[agent_name] = ranking_rewards[i]
+                        win_loss[agent_name] = 1 if ranks[0] == i else 0
+
+                elif players[i]["status"] in [constants.Status.STATUS_ELIMINATED_WENT_OUT_MAP.value,
+                                              constants.Status.STATUS_ELIMINATED_OUT_OF_ENERGY.value]:
+                    rewards[agent_name] = -1
+                    win_loss[agent_name] = 0
+
+                if players[i]["lastAction"] == constants.Action.ACTION_CRAFT.value \
+                        and self.prev_raw_obs.mapInfo.gold_amount(players[i]["posx"], players[i]["posy"]) == 0:
+                    # rewards[agent_name] -= 0.05
+                    self.stat[i][Metrics.INVALID_CRAFT.name] += 1
+                elif players[i]["lastAction"] in [constants.Action.ACTION_GO_UP.value,
+                                                  constants.Action.ACTION_GO_DOWN.value,
+                                                  constants.Action.ACTION_GO_LEFT.value,
+                                                  constants.Action.ACTION_GO_RIGHT.value] \
+                        and raw_obs.mapInfo.gold_amount(players[i]["posx"], players[i]["posy"]):
+                    rewards[agent_name] += 0.001
+                elif players[i]["lastAction"] == constants.Action.ACTION_FREE.value \
+                        and self.prev_raw_obs.players[i]["energy"] > 40:
+                    # rewards[agent_name] -= 0.02
+                    self.stat[i][Metrics.INVALID_FREE.name] += 1
+
+                if raw_obs.mapInfo.gold_amount(players[i]["posx"], players[i]["posy"]) == 0:
+                    if not (players[i]["lastAction"] == constants.Action.ACTION_CRAFT.value
+                            and self.prev_raw_obs.mapInfo.gold_amount(players[i]["posx"], players[i]["posy"])):
+                        # rewards[agent_name] -= 0.001
+                        self.stat[i][Metrics.FINDING_GOLD.name] += 1
+
+                self.prev_score[i] = players[i]["score"]
+                self.prev_energy[i] = players[i]["energy"]
+
+                alpha = ray.get(annealing.get_alpha.remote(agent_name[:-2]))
+
+                rewards[agent_name] = rewards[agent_name] + (1 - alpha) * energy_reward[agent_name]
+                self.stat[i][Metrics.ENERGY_REWARD.name] += energy_reward[agent_name]
 
         return rewards, win_loss
 

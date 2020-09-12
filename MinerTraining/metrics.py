@@ -14,3 +14,4 @@ class Metrics(Enum):
     FINDING_GOLD = 9
     DOUBLE_FREE = 10
     TRIPLE_FREE = 11
+    ENERGY_REWARD = 12

@@ -4,6 +4,7 @@ simplefilter(action='ignore', category=FutureWarning)
 from collections import deque
 from MinerEnv import MinerEnv
 from fifth_model import FifthModel
+from seventh_model import SeventhModel
 import sys
 import torch
 import utils
@@ -15,6 +16,8 @@ ACTION_GO_DOWN = 3
 ACTION_FREE = 4
 ACTION_CRAFT = 5
 
+model_version = SeventhModel
+
 id = 0
 HOST = "localhost"
 PORT = 1110 + id
@@ -22,8 +25,9 @@ if len(sys.argv) == 3:
     HOST = str(sys.argv[1])
     PORT = int(sys.argv[2])
 
-models = [FifthModel(), FifthModel(), FifthModel(), FifthModel(),
-          FifthModel(), FifthModel(), FifthModel(), FifthModel()]
+models = [model_version(), model_version(), model_version(), model_version(),
+          model_version(), model_version(), model_version(), model_version()]
+
 for i, model in enumerate(models):
     model.load_state_dict(torch.load(f"./TrainedModels/model_{i}.pt"))
     model.to('cpu')
@@ -44,7 +48,7 @@ try:
     # minerEnv.send_map_info(request)
     minerEnv.reset()
     last_3_actions = deque([4, 4, 4], maxlen=3)
-    obs, raw_obs = minerEnv.get_state(last_3_actions)  ##Getting an initial state
+    obs, raw_obs = minerEnv.get_state_v2(last_3_actions)  ##Getting an initial state
 
     while not minerEnv.check_terminate():
         try:
@@ -69,7 +73,7 @@ try:
             print("next action = ", action)
             minerEnv.step(str(action))  # Performing the action in order to obtain the new state
             last_3_actions.append(best_model_act)
-            s_next, raw_obs = minerEnv.get_state(last_3_actions)  # Getting a new state
+            s_next, raw_obs = minerEnv.get_state_v2(last_3_actions)  # Getting a new state
             obs = s_next
 
         except Exception as e:

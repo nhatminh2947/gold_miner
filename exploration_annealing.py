@@ -10,6 +10,7 @@ class ExplorationAnnealing:
 
     def update_alpha(self, policy, gold):
         self.alphas[policy] = 1 - np.tanh(0.5 * (gold / 500))
+        return self.alphas[policy]
 
     def get_alpha(self, policy):
         return self.alphas[policy]

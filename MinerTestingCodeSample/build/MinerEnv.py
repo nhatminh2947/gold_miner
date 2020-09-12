@@ -219,9 +219,121 @@ class MinerEnv:
                             fill_value=max(0, obs.energy / (constants.MAX_ENERGY / 2)))
                 ]), dtype=torch.float), 0),
                 "fc_features": torch.unsqueeze(torch.tensor(np.concatenate([
-                        position,
-                        one_hot_last_3_actions
-                    ]), dtype=torch.float), 0)
+                    position,
+                    one_hot_last_3_actions
+                ]), dtype=torch.float), 0)
+            }
+        }
+
+        return featurized_obs, self.state
+
+    def get_state_v2(self, last_3_actions):
+        obs = self.state
+
+        player_channel = np.zeros((4, obs.mapInfo.max_y + 1, obs.mapInfo.max_x + 1), dtype=float)
+        obstacle_1 = np.zeros([obs.mapInfo.max_y + 1, obs.mapInfo.max_x + 1], dtype=float)
+        obstacle_random = np.zeros([obs.mapInfo.max_y + 1, obs.mapInfo.max_x + 1], dtype=float)
+        obstacle_5 = np.zeros([obs.mapInfo.max_y + 1, obs.mapInfo.max_x + 1], dtype=float)
+        obstacle_10 = np.zeros([obs.mapInfo.max_y + 1, obs.mapInfo.max_x + 1], dtype=float)
+        obstacle_20 = np.zeros([obs.mapInfo.max_y + 1, obs.mapInfo.max_x + 1], dtype=float)
+        obstacle_40 = np.zeros([obs.mapInfo.max_y + 1, obs.mapInfo.max_x + 1], dtype=float)
+        obstacle_100 = np.zeros([obs.mapInfo.max_y + 1, obs.mapInfo.max_x + 1], dtype=float)
+        obstacle_value_min = np.zeros([obs.mapInfo.max_y + 1, obs.mapInfo.max_x + 1], dtype=float)
+        obstacle_value_max = np.zeros([obs.mapInfo.max_y + 1, obs.mapInfo.max_x + 1], dtype=float)
+
+        gold = np.zeros([obs.mapInfo.max_y + 1, obs.mapInfo.max_x + 1], dtype=float)
+        gold_amount = np.zeros([obs.mapInfo.max_y + 1, obs.mapInfo.max_x + 1], dtype=float)
+
+        for i in range(obs.mapInfo.max_y + 1):
+            for j in range(obs.mapInfo.max_x + 1):
+                type, value = None, None
+                for cell in obs.mapInfo.obstacles:
+                    if j == cell["posx"] and i == cell["posy"]:
+                        type, value = cell["type"], cell["value"]
+
+                if type is None and value is None:
+                    has_gold = False
+                    for cell in obs.mapInfo.golds:
+                        if j == cell["posx"] and i == cell["posy"]:
+                            has_gold = True
+
+                    if not has_gold:
+                        value = -1
+
+                if value == 0:  # Forest
+                    obstacle_random[i, j] = 1
+                if value == -1:  # Land
+                    obstacle_1[i, j] = 1
+                if value == -5:  # Swamp 1
+                    obstacle_5[i, j] = 1
+                if value == -10:  # Trap
+                    obstacle_10[i, j] = 1
+                if value == -20:  # Swamp 2
+                    obstacle_20[i, j] = 1
+                if value == -40:  # Swamp 3
+                    obstacle_40[i, j] = 1
+                if value == -100:  # Swamp 4
+                    obstacle_100[i, j] = 1
+                if value is None:  # Gold spot
+                    gold[i, j] = 1
+                    value = -4
+
+                obstacle_value_min[i, j] = (-value if value != 0 else 5) / constants.MAX_ENERGY
+                obstacle_value_max[i, j] = (-value if value != 0 else 20) / constants.MAX_ENERGY
+
+                gold_amount[i, j] = obs.mapInfo.gold_amount(j, i) / 1250
+
+        scores = [obs.score, 0, 0, 0]
+        energies = [obs.energy, 0, 0, 0]
+        player_channel[0][obs.y, obs.x] = 1
+
+        id = 1
+        for player in obs.players:
+            if player["playerId"] == obs.id:
+                continue
+
+            if "status" in player and player["status"] == constants.Status.STATUS_PLAYING.value:
+                player_channel[id][player["posy"], player["posx"]] = 1
+                scores[id] = player["scores"]
+                energies[id] = player["energy"]
+                id += 1
+
+        board = np.stack([
+            obstacle_random,
+            obstacle_1,
+            obstacle_5,
+            obstacle_10,
+            obstacle_20,
+            obstacle_40,
+            obstacle_100,
+            obstacle_value_min,
+            obstacle_value_max,
+            gold,
+            gold_amount
+        ])
+        # board = np.concatenate([players, board])
+
+        position = np.clip(np.array([obs.y / 8 * 2 - 1,
+                                     obs.x / 20 * 2 - 1]), -1, 1)
+
+        one_hot_last_3_actions = np.zeros((3, 6), dtype=np.float32)
+        one_hot_last_3_actions[np.arange(3), last_3_actions] = 1
+        one_hot_last_3_actions = one_hot_last_3_actions.reshape(-1)
+
+        featurized_obs = {
+            "obs": {
+                "conv_features": torch.unsqueeze(torch.tensor(np.concatenate([
+                    player_channel,
+                    np.copy(board),
+                    np.full((1, obs.mapInfo.max_y + 1, obs.mapInfo.max_x + 1),
+                            fill_value=max(0, obs.energy / (constants.MAX_ENERGY / 2)))
+                ]), dtype=torch.float), 0),
+                "fc_features": torch.unsqueeze(torch.tensor(np.concatenate([
+                    position,
+                    one_hot_last_3_actions,
+                    scores,
+                    energies
+                ]), dtype=torch.float), 0)
             }
         }
 

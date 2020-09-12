@@ -1,6 +1,5 @@
 from enum import Enum
 
-
 # GOLD PER MAP
 # Map 1 6500 - 20 gold spots
 # Map 2 6850 - 19 gold spots
@@ -8,7 +7,7 @@ from enum import Enum
 # Map 4 7500 - 19 gold spots
 # Map 5 7100 - 21 gold spots
 MAX_LEN = 100
-NUM_FEATURES = 14
+NUM_FEATURES = 16
 MAX_EXTRACTABLE_GOLD = 5000
 N_COLS = 21
 N_ROWS = 9
