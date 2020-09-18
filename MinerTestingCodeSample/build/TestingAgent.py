@@ -54,7 +54,7 @@ try:
         try:
             utils.print_map(raw_obs)
             votes = {i: 0 for i in range(6)}
-            best_model_act = models[7].predict(obs)
+            best_model_act = models[0].predict(obs)
             # votes[best_model_act] += 1
             for model in models:
                 votes[model.predict(obs)] += 1
@@ -69,7 +69,7 @@ try:
             if votes[best_model_act] == max_count:
                 choosen_move = best_model_act
 
-            action = choosen_move  # Getting an action from the trained model
+            action = best_model_act  # Getting an action from the trained model
             print("next action = ", action)
             minerEnv.step(str(action))  # Performing the action in order to obtain the new state
             last_3_actions.append(best_model_act)

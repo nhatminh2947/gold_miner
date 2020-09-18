@@ -1,7 +1,7 @@
 import ray
 import torch
 from ray.rllib.agents.ppo import PPOTrainer
-from models import ThirdModel, SecondModel, FourthModel, FifthModel
+from models import ThirdModel, SecondModel, FourthModel, FifthModel, SeventhModel
 from training import initialize
 from utils import policy_mapping
 import constants
@@ -24,8 +24,8 @@ ppo_agent = PPOTrainer(config={
     "framework": "torch"
 }, env="MinerEnv-v0")
 
-id = 600
-checkpoint_dir = "/home/lucius/ray_results/gold_miner_2/PPO_MinerEnv-v0_0_2020-09-11_16-59-56ikv6tou7"
+id = 2050
+checkpoint_dir = "/home/lucius/ray_results/gold_miner_2/PPO_MinerEnv-v0_0_2020-09-13_00-54-26q3mjnpej"
 checkpoint = "{}/checkpoint_{}/checkpoint-{}".format(checkpoint_dir, id, id)
 
 ppo_agent.restore(checkpoint)

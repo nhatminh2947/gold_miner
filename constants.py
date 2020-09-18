@@ -2,6 +2,8 @@ from enum import Enum
 
 from gym.spaces import Dict, Box, Discrete
 
+E_LOSS = [-1, 0, -10, -5, -20, -40, -100, -4]
+
 # GOLD PER MAP
 # Map 1 6500 - 20 gold spots
 # Map 2 6850 - 19 gold spots

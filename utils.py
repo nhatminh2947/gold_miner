@@ -430,6 +430,66 @@ def print_map(obs):
         print()
     print()
 
+def print_map_simulator(map, positions, energies, scores):
+    width = 8
+    # print(f"Steps: {obs.stepCount}")
+    print(f"Energy ", end='')
+    for i in range(4):
+        print(f"({i}):{energies[i]:5}\t", end='')
+    print()
+
+    print(f"Gold   ", end='')
+    for i in range(4):
+        print(f"({i}):{scores[i]:5}\t", end='')
+    print()
+
+    for i in range(constants.N_ROWS):
+        for j in range(constants.N_COLS):
+            players = ""
+            value = map[i][j]
+            text_color = ColorText.CBLACK
+
+            for k in range(4):
+                if j == positions[k][1] and i == positions[k][0]:
+                    if k != 0:
+                        players += " "
+                    players += str(k)
+                    text_color = ColorText.CWHITE2
+
+            color = ColorText.CWHITEBG
+
+            if value == 0:
+                color = ColorText.CGREENBG
+            elif value == -10:
+                color = ColorText.CGREYBG
+            elif value in [-5, -20, -40, -100]:
+                color = ColorText.CBLUEBG
+            elif value > 0:
+                color = ColorText.CYELLOWBG
+
+            print(f"{color}{text_color}{players:{width}}{ColorText.CEND}", end="")
+        print()
+
+        for j in range(constants.N_COLS):
+            value = map[i][j]
+            text_color = ColorText.CBLACK
+            color = ColorText.CWHITEBG
+
+            if value == 0:
+                color = ColorText.CGREENBG
+            elif value == -10:
+                color = ColorText.CGREYBG
+            elif value in [-5, -20, -40, -100]:
+                color = ColorText.CBLUEBG
+            elif value > 0:
+                color = ColorText.CYELLOWBG
+
+            if value in [-1, -10, 0]:
+                value = ""
+
+            print(f"{color}{text_color}{str(value):{width}}{ColorText.CEND}", end="")
+        print()
+    print()
 
 def random_gold(map):
     m = json.loads(map)
